@@ -3,6 +3,8 @@ import { chart } from '../core/chart.js';
 import { ScenePhysics } from '../models/scene.js';
 
 /* Controller for the scanner, sinogram bench, reconstruction film and coincidence timeline. */
+// Presentation time for one illustrated coincidence, long enough to read each of its beats.
+const EVENT_SECONDS = 3.4;
 export function init({ volume, tissue }) {
   const q = $,
     put = (id, text) => (q(id).textContent = text),
@@ -236,7 +238,10 @@ export function init({ volume, tissue }) {
   }
   function newEvent() {
     if (!source) return;
-    const next = ScenePhysics.event(S, source, tissue, random);
+    let next = ScenePhysics.event(S, source, tissue, random);
+    // The first illustrated pair is a true coincidence so the story starts with the simple case.
+    for (let i = 0; i < 40 && !eventRecords.length && next && next.kind !== 'true'; i++)
+      next = ScenePhysics.event(S, source, tissue, random);
     if (!next) {
       put('eventClass', 'No accepted illustrative pair in this batch');
       return;
@@ -569,33 +574,21 @@ export function init({ volume, tissue }) {
   }
   function hud(key) {
     if (key === 'scanner') {
-      const e = event,
-        stage =
-          eventClock < 0.12
-            ? 'Positron range'
-            : eventClock < 0.67
-              ? '511 keV photon flight'
-              : eventClock < 0.8
-                ? 'Detection and acceptance'
-                : 'Coincidence / line of response';
+      // The view owns the beat timing of each event, so it also names the current beat.
+      const block = q('scannerCamera').value === 'block',
+        story = event && views.scanner?.stage?.();
       return {
-        title:
-          q('scannerCamera').value === 'block'
-            ? 'Crystal → light guide → SiPM'
-            : e
-              ? stage
-              : 'Inside an ' + (S.ring / 10).toFixed(0) + ' cm detector ring',
-        kicker: 'SYNTHETIC BRAIN · GEOMETRY IN mm · MARKERS ENLARGED',
-        caption:
-          q('scannerCamera').value === 'block'
-            ? S.crystal + ' × ' + S.crystal + ' × ' + S.depth + ' mm crystals; exploded layer gaps are illustrative.'
-            : e
-              ? e.kind === 'random'
-                ? 'Unrelated emissions form an accidental pair.'
-                : e.kind === 'scatter'
-                  ? 'A kink changes the inferred line of response.'
-                  : 'A true pair constrains activity to a line.'
-              : 'Activity-weighted phantom points; the body is schematic. Play to follow accepted pairs.',
+        title: block
+          ? 'Crystal → light guide → SiPM'
+          : story
+            ? story.title
+            : 'Inside an ' + (S.ring / 10).toFixed(0) + ' cm detector ring',
+        kicker: 'SYNTHETIC BRAIN · GEOMETRY IN mm · MARKERS ENLARGED · TIME SLOWED',
+        caption: block
+          ? S.crystal + ' × ' + S.crystal + ' × ' + S.depth + ' mm crystals; exploded layer gaps are illustrative.'
+          : story
+            ? story.caption
+            : 'Activity-weighted phantom points; the body is schematic. Play to follow accepted pairs.',
         readout: 'Activity 0–7 a.u. · ' + (S.tof ? S.tof + ' ps TOF' : 'TOF off'),
         scales: [{ label: 'Activity', max: '7 a.u.' }],
       };
@@ -720,7 +713,7 @@ export function init({ volume, tissue }) {
   }
   function tick(now) {
     raf = 0;
-    if (now - lastTick < 33) {
+    if (now - lastTick < 15) {
       raf = requestAnimationFrame(tick);
       return;
     }
@@ -728,7 +721,7 @@ export function init({ volume, tissue }) {
     lastTick = now;
     if (playing.scanner) {
       progress = Math.min(1, progress + dt / 24);
-      eventClock += dt / 1.6;
+      eventClock += dt / EVENT_SECONDS;
       if (!event || eventClock >= 1) {
         eventClock = 0;
         newEvent();
@@ -1035,6 +1028,7 @@ export function init({ volume, tissue }) {
           filmBack: q('filmBack'),
           refreshBench: drawBench,
           refreshFilm: drawFilm,
+          onFail: () => fallback(key, 'The 3D view stopped. Its numerical panels remain available.'),
         });
         views[key].configure(S);
         q(key + 'Fallback').hidden = true;

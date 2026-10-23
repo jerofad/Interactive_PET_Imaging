@@ -1,6 +1,7 @@
 /* Four Three.js surfaces. Coordinates are mm unless the scene explicitly labels a diagram. */
 import * as THREE from 'three';
 import { ScenePhysics } from '../models/scene.js';
+import { createScanner } from './scanner-scene.js';
 
 export const SceneViews = (() => {
   const C = {
@@ -22,8 +23,9 @@ export const SceneViews = (() => {
     const camera = new T.PerspectiveCamera(45, 1, 0.1, 15000);
     camera.up.set(0, 1, 0);
     const root = new T.Group(),
-      dynamic = new T.Group();
-    scene.add(root, dynamic, new T.HemisphereLight(0xffffff, 0x25304d, 2.0));
+      dynamic = new T.Group(),
+      story = new T.Group();
+    scene.add(root, dynamic, story, new T.HemisphereLight(0xffffff, 0x25304d, 2.0));
     const lamp = new T.DirectionalLight(0xffffff, 2);
     lamp.position.set(400, 700, 900);
     scene.add(lamp);
@@ -37,9 +39,12 @@ export const SceneViews = (() => {
       textures = [],
       lastHUD = {},
       orbit = { yaw: 0, pitch: 0, zoom: 1 },
-      drag = null;
+      spin = { yaw: 0, pitch: 0 },
+      drag = null,
+      tween = null,
+      pending = 0;
     const vec = (a) => new T.Vector3(...a),
-      world = (p) => [p[0], p[2], -p[1]],
+      reduced = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
       material = (color, opacity = 1) =>
         new T.MeshStandardMaterial({
           color,
@@ -99,46 +104,56 @@ export const SceneViews = (() => {
       textures.push(texture);
       return o;
     }
-    function cameraPose() {
-      const aspect = width / Math.max(1, height);
-      camera.aspect = aspect;
-      camera.up.set(0, 1, 0);
+    function preset(aspect) {
       let eye,
         target = [0, 0, 0];
       if (kind === 'scanner') {
-        if (cam === 'block') {
-          eye = [70, 70, 150];
-          target = [0, 0, -5];
-        } else if (cam === 'slice') {
-          eye = [0, Math.max(1000, settings.ring / Math.min(1, aspect)), 0];
-          camera.up.set(0, 0, -1);
-        } else if (cam === 'inside') {
-          eye = [0, 20, 20];
-          target = [settings.ring / 2, 0, 0];
-        } else {
-          const k = Math.max(1, 1 / aspect);
-          eye = [1050 * k, 550 * k, 1300 * k];
-          target = [0, -310, 0];
-        }
+        if (cam !== 'block') return scannerScene.pose(cam, aspect);
+        eye = [70, 70, 150];
+        target = [0, 0, -5];
       } else {
         const span = aspect < 0.85 ? 770 : 560,
           d = Math.max(span, 1050 / aspect) / (2 * Math.tan(Math.PI / 8));
         eye = [0, 65, d];
       }
-      const relative = new T.Vector3(...eye).sub(vec(target)),
-        sph = new T.Spherical().setFromVector3(relative);
+      return { eye, target };
+    }
+    // Camera presets ease into each other: the target slides and the eye swings around it.
+    function cameraPose(now = performance.now()) {
+      const aspect = width / Math.max(1, height),
+        to = preset(aspect),
+        sph = new T.Spherical().setFromVector3(vec(to.eye).sub(vec(to.target)));
+      camera.aspect = aspect;
+      camera.up.set(0, 1, 0);
       sph.theta += orbit.yaw;
       sph.phi = Math.max(0.05, Math.min(Math.PI - 0.05, sph.phi + orbit.pitch));
       sph.radius *= orbit.zoom;
-      camera.position.copy(new T.Vector3().setFromSpherical(sph).add(vec(target)));
-      camera.lookAt(...target);
+      let target = vec(to.target);
+      if (tween) {
+        const x = Math.min(1, (now - tween.start) / tween.duration),
+          k = x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2,
+          from = tween.from;
+        let dTheta = sph.theta - from.theta;
+        dTheta -= 2 * Math.PI * Math.round(dTheta / (2 * Math.PI));
+        sph.set(
+          from.radius + (sph.radius - from.radius) * k,
+          from.phi + (sph.phi - from.phi) * k,
+          from.theta + dTheta * k,
+        );
+        target = from.target.clone().lerp(target, k);
+        if (x >= 1) tween = null;
+      }
+      camera.position.copy(new T.Vector3().setFromSpherical(sph).add(target));
+      camera.lookAt(target);
       camera.updateProjectionMatrix();
+      camera.userData.target = target;
     }
     function scanner() {
       dispose(root);
       dispose(dynamic);
       labels = [];
       textures = [];
+      story.visible = cam !== 'block';
       if (cam === 'block') {
         const d = settings.crystal,
           depth = settings.depth,
@@ -164,86 +179,8 @@ export const SceneViews = (() => {
         ];
         return;
       }
-      const radius = settings.ring / 2,
-        blockWidth = settings.crystal * 8,
-        nc = Math.max(24, Math.round((2 * Math.PI * radius) / blockWidth)),
-        nr = Math.max(1, Math.ceil(settings.fov / blockWidth)),
-        g = new T.BoxGeometry(((2 * Math.PI * radius) / nc) * 0.94, (settings.fov / nr) * 0.94, settings.depth),
-        m = material(C.detector, 0.86),
-        blocks = new T.InstancedMesh(g, m, nc * nr),
-        dummy = new T.Object3D();
-      let n = 0;
-      for (let j = 0; j < nr; j++)
-        for (let i = 0; i < nc; i++) {
-          const a = (i * 2 * Math.PI) / nc;
-          dummy.position.set(
-            (radius + settings.depth / 2) * Math.sin(a),
-            ((j + 0.5) * settings.fov) / nr - settings.fov / 2,
-            (radius + settings.depth / 2) * Math.cos(a),
-          );
-          dummy.rotation.set(0, a, 0);
-          dummy.updateMatrix();
-          blocks.setMatrixAt(n++, dummy.matrix);
-        }
-      root.add(blocks);
-      if (inputs.housing()) {
-        mesh(
-          new T.CylinderGeometry(radius + 65, radius + 65, settings.fov + 40, 96, 1, true),
-          0x687b91,
-          [0, 0, 0],
-          0.16,
-        );
-        for (const y of [-settings.fov / 2 - 20, settings.fov / 2 + 20]) {
-          const ring = mesh(new T.RingGeometry(radius + settings.depth, radius + 65, 96), 0x8c9baa, [0, y, 0], 0.3);
-          ring.rotation.x = Math.PI / 2;
-        }
-      }
-      if (settings.mode === '2D')
-        for (let y = -settings.fov / 2; y < settings.fov / 2; y += settings.crystal * 4) {
-          const septum = mesh(new T.RingGeometry(radius - 24, radius + settings.depth, 72), 0x66807f, [0, y, 0], 0.45);
-          septum.rotation.x = Math.PI / 2;
-        }
-      mesh(new T.BoxGeometry(320, 1750, 30), 0x304a63, [0, -610, 170]);
-      ellipsoid([0, -310, 20], [150, 240, 95], 0.14);
-      ellipsoid([-76, -810, 40], [58, 300, 62], 0.14);
-      ellipsoid([76, -810, 40], [58, 300, 62], 0.14);
-      ellipsoid([-185, -420, 35], [40, 240, 40], 0.14);
-      ellipsoid([185, -420, 35], [40, 240, 40], 0.14);
-      ellipsoid([0, 0, 0], [84, 92, 105], 0.12);
-      const positions = [],
-        colors = [];
-      for (const p of inputs.cloud) {
-        positions.push(...world(p.point));
-        const k = Math.max(0, Math.min(255, Math.round((p.value / 7) * 255))),
-          color = new T.Color(
-            inputs.colours[k * 3] / 255,
-            inputs.colours[k * 3 + 1] / 255,
-            inputs.colours[k * 3 + 2] / 255,
-          ).convertSRGBToLinear();
-        colors.push(color.r, color.g, color.b);
-      }
-      const pg = new T.BufferGeometry();
-      pg.setAttribute('position', new T.Float32BufferAttribute(positions, 3));
-      pg.setAttribute('color', new T.Float32BufferAttribute(colors, 3));
-      root.add(
-        new T.Points(
-          pg,
-          new T.PointsMaterial({ size: 3.5, vertexColors: true, transparent: true, opacity: 0.82, depthWrite: false }),
-        ),
-      );
-      labels = [
-        { p: [0, settings.fov / 2 + 60, 0], text: 'Axial FOV ' + settings.fov + ' mm' },
-        { p: [0, -1150, 165], text: 'Schematic body · head phantom contains activity' },
-      ];
-      line(
-        [
-          [-radius, 0, 0],
-          [radius, 0, 0],
-        ],
-        0x486275,
-        true,
-        root,
-      );
+      scannerScene.build(settings, cam);
+      labels = scannerScene.labels();
     }
     function boards(sources, names) {
       textures.forEach((t) => t.dispose());
@@ -467,63 +404,12 @@ export const SceneViews = (() => {
       );
       if (time <= max) sphere([x, 0, 5], 6, C.activity);
     }
-    const walk = (points, f) => {
-      let total = 0;
-      const lengths = [];
-      for (let i = 1; i < points.length; i++) {
-        const l = ScenePhysics.norm(points[i].map((v, j) => v - points[i - 1][j]));
-        lengths.push(l);
-        total += l;
-      }
-      let d = f * total;
-      for (let i = 0; i < lengths.length; i++) {
-        if (d <= lengths[i])
-          return ScenePhysics.add(
-            points[i],
-            points[i + 1].map((v, j) => v - points[i][j]),
-            d / Math.max(1e-9, lengths[i]),
-          );
-        d -= lengths[i];
-      }
-      return points.at(-1);
-    };
     function updateEvent(event, progress) {
       currentEvent = event;
       eventProgress = progress;
-      if (kind !== 'scanner' || cam === 'block') return;
-      dispose(dynamic);
-      if (!event || !inputs.show(event.kind)) return;
-      const col = event.kind === 'true' ? C.photon : event.kind === 'scatter' ? C.scatter : C.random,
-        dashed = event.kind === 'random' ? 'random' : event.kind !== 'true';
-      line([world(event.origin), world(event.annihilation)], C.activity);
-      sphere(world(event.origin), 4, C.activity);
-      if (event.kind === 'random') sphere(world(event.origin2), 4, C.activity);
-      for (const arm of event.arms) {
-        line(arm.points.map(world), col, dashed);
-        const f = Math.max(0, Math.min(1, (progress - 0.12) / 0.55));
-        sphere(world(walk(arm.points, f)), 6, col);
-        if (progress > 0.65) sphere(world(arm.hit), 11, C.detector, dynamic, 0.8);
-      }
-      if (progress > 0.77) {
-        line(
-          event.arms.map((a) => world(a.hit)),
-          col,
-          dashed,
-        );
-        if (settings.tof && event.kind === 'true') {
-          const a = event.arms[0].hit,
-            b = event.arms[1].hit,
-            mid = a.map((v, i) => (v + b[i]) / 2),
-            u = ScenePhysics.unit(a.map((v, i) => v - b[i])),
-            position = ScenePhysics.add(mid, u, event.tofPosition),
-            fwhm = (settings.tof * ScenePhysics.c) / 2000;
-          line(
-            [world(ScenePhysics.add(position, u, -fwhm / 2)), world(ScenePhysics.add(position, u, fwhm / 2))],
-            C.activity,
-          );
-          sphere(world(position), 8, C.activity);
-        }
-      }
+      if (kind !== 'scanner') return;
+      scannerScene.update(event, progress);
+      if (cam !== 'block') labels = scannerScene.labels();
     }
     function wrap(ctx, text, x, y, max, lineHeight, maxLines = 3) {
       const words = text.split(' ');
@@ -553,9 +439,19 @@ export const SceneViews = (() => {
         scales = data.scales || [],
         header = compact ? 43 : small ? 82 : 77,
         footer = compact ? 65 : scales.length ? 128 : small ? 101 : 86;
-      ctx.fillStyle = 'rgba(6,12,22,.88)';
-      ctx.fillRect(0, 0, width, header);
-      ctx.fillRect(0, height - footer, width, footer);
+      // Header and footer fade into the scene rather than boxing it in.
+      const top = ctx.createLinearGradient(0, 0, 0, header + 18),
+        bottom = ctx.createLinearGradient(0, height - footer - 18, 0, height);
+      top.addColorStop(0, 'rgba(6,12,22,.92)');
+      top.addColorStop(0.7, 'rgba(6,12,22,.72)');
+      top.addColorStop(1, 'rgba(6,12,22,0)');
+      bottom.addColorStop(0, 'rgba(6,12,22,0)');
+      bottom.addColorStop(0.3, 'rgba(6,12,22,.72)');
+      bottom.addColorStop(1, 'rgba(6,12,22,.92)');
+      ctx.fillStyle = top;
+      ctx.fillRect(0, 0, width, header + 18);
+      ctx.fillStyle = bottom;
+      ctx.fillRect(0, height - footer - 18, width, footer + 18);
       ctx.textAlign = 'left';
       ctx.fillStyle = C.text;
       ctx.font = '600 ' + font + 'px system-ui';
@@ -594,20 +490,32 @@ export const SceneViews = (() => {
         ctx.fillStyle = '#f1bd77';
         ctx.fillText(data.readout || '', 18, height - 13, width - 36);
       }
-      if (compact) return;
-      ctx.font = (small ? 12 : 15) + 'px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#b9c8db';
       camera.updateMatrixWorld();
+      const project = (point) => {
+        const p = vec(point).project(camera);
+        return { x: ((p.x + 1) * width) / 2, y: ((1 - p.y) * height) / 2, front: p.z < 1 };
+      };
+      if (kind === 'scanner' && cam !== 'block')
+        scannerScene.overlay(ctx, { width, height, header, footer, project, compact });
+      if (compact) return;
+      ctx.textAlign = 'center';
       for (const label of labels) {
-        const p = vec(label.p).project(camera),
-          x = ((p.x + 1) * width) / 2,
-          y = ((1 - p.y) * height) / 2;
-        if (p.z < 1 && x > 30 && x < width - 30 && y > header + 10 && y < height - footer - 15) {
-          ctx.fillStyle = 'rgba(6,12,22,.8)';
-          const measure = ctx.measureText(label.text).width;
-          ctx.fillRect(x - measure / 2 - 5, y - 15, measure + 10, 22);
-          ctx.fillStyle = '#b9c8db';
+        // Coloured labels are small chips that sit just above the thing they name.
+        const chip = label.color !== undefined,
+          { x, y: py, front } = project(label.p),
+          y = chip ? py - 16 : py;
+        ctx.font = chip ? '12px monospace' : (small ? 12 : 15) + 'px monospace';
+        if (front && x > 30 && x < width - 30 && y > header + 10 && y < height - footer - 15) {
+          const measure = ctx.measureText(label.text).width,
+            hex = chip ? '#' + label.color.toString(16).padStart(6, '0') : '#b9c8db';
+          ctx.fillStyle = 'rgba(6,12,22,.82)';
+          ctx.fillRect(x - measure / 2 - 5, y - (chip ? 13 : 15), measure + 10, chip ? 18 : 22);
+          if (chip) {
+            ctx.strokeStyle = hex;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x - measure / 2 - 5, y - 13, measure + 10, 18);
+          }
+          ctx.fillStyle = hex;
           ctx.fillText(label.text, x, y);
         }
       }
@@ -620,6 +528,7 @@ export const SceneViews = (() => {
       width = w;
       height = h;
       renderer.setSize(width, height, false);
+      scannerScene?.resize(width, height);
       cameraPose();
       if (kind === 'bench') {
         bench();
@@ -631,10 +540,33 @@ export const SceneViews = (() => {
       }
       overlay(lastHUD);
     }
+    // Renders are coalesced into one per animation frame; camera easing and orbit inertia keep
+    // the loop alive on their own and stop it when they settle.
+    function frame(now) {
+      pending = 0;
+      try {
+        resize();
+        if (!drag && (Math.abs(spin.yaw) > 1e-4 || Math.abs(spin.pitch) > 1e-4)) {
+          orbit.yaw += spin.yaw;
+          orbit.pitch += spin.pitch;
+          spin.yaw *= 0.9;
+          spin.pitch *= 0.9;
+        } else if (!drag) spin = { yaw: 0, pitch: 0 };
+        cameraPose(now);
+        renderer.render(scene, camera);
+        overlay(lastHUD);
+        if (tween || spin.yaw || spin.pitch) requestFrame();
+      } catch (e) {
+        tween = null;
+        inputs.onFail?.(e);
+      }
+    }
+    function requestFrame() {
+      if (!pending) pending = requestAnimationFrame(frame);
+    }
     function render(data = lastHUD) {
-      resize();
-      renderer.render(scene, camera);
-      overlay(data);
+      lastHUD = data;
+      requestFrame();
     }
     function configure(s) {
       settings = { ...s };
@@ -645,37 +577,52 @@ export const SceneViews = (() => {
       cameraPose();
     }
     function setCamera(name) {
+      // The exploded block is a different scene, so only ring views ease between each other.
+      const ease = !reduced() && cam !== 'block' && name !== 'block' && width > 1;
+      if (ease) {
+        const target = camera.userData.target?.clone() || new T.Vector3(),
+          from = new T.Spherical().setFromVector3(camera.position.clone().sub(target));
+        tween = { start: performance.now(), duration: 900, from: Object.assign(from, { target }) };
+      } else tween = null;
       cam = name;
       orbit = { yaw: 0, pitch: 0, zoom: 1 };
+      spin = { yaw: 0, pitch: 0 };
       scanner();
       cameraPose();
       updateEvent(currentEvent, eventProgress);
     }
     canvas.addEventListener('pointerdown', (e) => {
       drag = { x: e.clientX, y: e.clientY };
+      tween = null;
+      spin = { yaw: 0, pitch: 0 };
       canvas.setPointerCapture?.(e.pointerId);
     });
     canvas.addEventListener('pointermove', (e) => {
       if (!drag) return;
-      orbit.yaw += (e.clientX - drag.x) * 0.007;
-      orbit.pitch += (e.clientY - drag.y) * 0.007;
+      spin = { yaw: (e.clientX - drag.x) * 0.007, pitch: (e.clientY - drag.y) * 0.007 };
+      orbit.yaw += spin.yaw;
+      orbit.pitch += spin.pitch;
       drag = { x: e.clientX, y: e.clientY };
-      cameraPose();
       render();
     });
-    canvas.addEventListener('pointerup', () => (drag = null));
-    canvas.addEventListener('pointercancel', () => (drag = null));
+    const release = () => {
+      drag = null;
+      if (reduced()) spin = { yaw: 0, pitch: 0 };
+      render();
+    };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
     canvas.addEventListener(
       'wheel',
       (e) => {
         if (!e.ctrlKey) return;
         e.preventDefault();
         orbit.zoom = Math.max(0.35, Math.min(3, orbit.zoom * Math.exp(e.deltaY * 0.001)));
-        cameraPose();
         render();
       },
       { passive: false },
     );
+    const scannerScene = kind === 'scanner' ? createScanner({ root, story, inputs, C, camera, mesh, material }) : null;
     resize();
     if (kind === 'scanner') scanner();
     if (kind === 'bench') bench();
@@ -687,6 +634,7 @@ export const SceneViews = (() => {
       configure,
       setCamera,
       updateEvent,
+      stage: () => (cam === 'block' ? null : scannerScene?.stage()),
       updateBench,
       updateFilm,
       timeline,
@@ -696,6 +644,7 @@ export const SceneViews = (() => {
         textures.forEach((t) => t.dispose());
         dispose(root);
         dispose(dynamic);
+        scannerScene?.dispose();
         renderer.dispose();
       },
       getScene: () => scene,
