@@ -1,0 +1,424 @@
+/* Multi-page shell: header, chapter navigation, page heads, takeaways, pager, glossary and landing page.
+   Builds on the tokens in tokens.css and the original notebook styles in components.css. */
+
+main:focus {
+  outline: none;
+}
+
+/* ---------- header ---------- */
+.sitehead {
+  padding: 18px 0;
+}
+.brand {
+  color: var(--text);
+  text-decoration: none;
+}
+.menubutton {
+  display: none;
+}
+
+/* ---------- chapter navigation ---------- */
+.sitenav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.sitenav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.sitenav a:hover {
+  color: var(--text);
+}
+.sitenav a[aria-current='page'] {
+  color: var(--activity);
+}
+.pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: none;
+}
+.pipeline a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.pipeline a[aria-current='page'] {
+  border-color: var(--activity);
+}
+.pipeline .num {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--raised);
+  font: 11px var(--mono);
+  color: var(--text);
+}
+.pipeline a[aria-current='page'] .num {
+  background: var(--activity);
+  color: var(--bg);
+}
+/* On wide screens only the current chapter shows its label; the rest show numbers with a tooltip-like title. */
+@media (min-width: 901px) and (max-width: 1300px) {
+  .pipeline a:not([aria-current='page']) .lbl {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+.navextra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.navhead {
+  font: 11px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.75;
+}
+.navextra .navhead:first-child {
+  margin-left: 0;
+}
+
+/* ---------- page head ---------- */
+.pagehead {
+  padding: 44px 0 30px;
+  max-width: 860px;
+}
+.pagehead .eyebrow {
+  color: var(--activity);
+  margin-bottom: 14px;
+}
+.pagehead h1 {
+  font-size: clamp(2.2rem, 4.2vw, 3.6rem);
+}
+.lead {
+  font-size: 1.15rem;
+  color: var(--muted);
+  margin: 18px 0 0;
+  max-width: 720px;
+}
+
+/* ---------- glossary terms ---------- */
+.term {
+  color: inherit;
+  text-decoration: underline dotted var(--anatomy);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+.term:hover {
+  color: var(--anatomy);
+}
+.termtip {
+  position: absolute;
+  z-index: 20;
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px #0003;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.termtip[hidden] {
+  display: none;
+}
+.glossary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0 32px;
+  margin: 0;
+}
+.glossary > div {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 24px;
+}
+.glossary > div:target {
+  border-top-color: var(--activity);
+}
+.glossary dt {
+  font-weight: 650;
+}
+.glossary dd {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* ---------- collapsed model assumptions ---------- */
+details.assumptions {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+details.assumptions > summary {
+  cursor: pointer;
+  color: var(--anatomy);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+details.assumptions > p {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  background: var(--raised);
+  border-left: 2px solid var(--anatomy);
+}
+figcaption > span {
+  display: block;
+}
+
+/* ---------- takeaways and pager ---------- */
+.takeaways {
+  margin: 40px 0 10px;
+  padding: 24px 28px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--activity);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.takeaways h2 {
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+}
+.takeaways ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.takeaways li {
+  margin: 6px 0;
+}
+.pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 30px 0 10px;
+}
+.pager a {
+  display: block;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface);
+}
+.pager a:hover {
+  border-color: var(--activity);
+}
+.pager small {
+  display: block;
+  font: 12px var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.pager .next {
+  text-align: right;
+  grid-column: 2;
+}
+.sitefoot {
+  margin-top: 40px;
+  padding: 26px 0 40px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--muted);
+}
+.sitefoot p {
+  margin: 0 0 8px;
+  max-width: 760px;
+}
+.noscript {
+  margin: 20px 0;
+}
+
+/* ---------- landing page ---------- */
+.landing {
+  border-top: 0;
+  padding-top: 10px;
+}
+.pipelinemap {
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.pipelinemap a {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  position: relative;
+}
+.pipelinemap a:hover {
+  border-color: var(--activity);
+}
+.pipelinemap .num {
+  font: 12px var(--mono);
+  color: var(--activity);
+}
+.pipelinemap span:last-child {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.paths {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+.pathcard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--raised);
+}
+.pathcard:hover {
+  border-color: var(--activity);
+}
+.pathcard small {
+  font: 12px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.pathcard strong {
+  font-size: 1.2rem;
+}
+.pathcard span {
+  color: var(--muted);
+  font-size: 14px;
+}
+.primarypath {
+  background: var(--activity);
+  border-color: var(--activity);
+  color: var(--bg);
+}
+.primarypath small,
+.primarypath span {
+  color: var(--bg);
+}
+/* Readout notes are <dd class="note"> so each <dl> holds only dt/dd groups. */
+.sceneReadouts dd.note {
+  font: 12px/1.5 var(--mono);
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ---------- misc ---------- */
+a.theorybutton {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 9px 15px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--raised);
+  color: var(--text);
+  text-decoration: none;
+}
+a.theorybutton:hover {
+  border-color: var(--activity);
+}
+.cards {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.presetnote {
+  margin-bottom: 16px;
+}
+.presetnote[hidden] {
+  display: none;
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 1100px) {
+  .pipelinemap {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .menubutton {
+    display: inline-block;
+  }
+  .sitenav {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sitenav[data-open='true'] {
+    display: flex;
+  }
+  .pipeline {
+    flex-direction: column;
+  }
+  .navextra {
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 8px;
+  }
+  .navhead {
+    margin-top: 8px;
+  }
+  .paths {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 620px) {
+  .wrap {
+    padding: 0 16px;
+  }
+  .sitehead {
+    flex-wrap: wrap;
+  }
+  .pipelinemap {
+    grid-template-columns: 1fr;
+  }
+  .pager {
+    grid-template-columns: 1fr;
+  }
+  .pager .next {
+    grid-column: 1;
+  }
+  .takeaways {
+    padding: 20px;
+  }
+}

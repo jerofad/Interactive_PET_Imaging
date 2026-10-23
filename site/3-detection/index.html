@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Photon detection · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="How a scintillation crystal and photosensor turn a 511 keV photon into energy, time and position estimates."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Photon detection" />
+    <meta
+      property="og:description"
+      content="How a scintillation crystal and photosensor turn a 511 keV photon into energy, time and position estimates."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="detection" data-features="theory">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 3 of 10</div>
+          <h1>Photon detection</h1>
+          <p class="lead">
+            Each photon must be stopped in a
+            <a
+              class="term"
+              data-term="scintillator"
+              href="../reference/#g-scintillator"
+              >scintillation crystal</a
+            >. The crystal turns deposited energy into light, and a photosensor
+            such as a
+            <a class="term" data-term="sipm" href="../reference/#g-sipm"
+              >SiPM</a
+            >
+            turns light into a pulse. That pulse gives the energy, arrival time
+            and position of the photon.
+          </p>
+        </header>
+
+        <section class="theorysection" id="chapter3">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 3 / Photon detection</div>
+              <h2>
+                A crystal turns deposited energy<br />into a measurable pulse.
+              </h2>
+            </div>
+          </div>
+          <div class="theorygrid">
+            <div class="theorycopy">
+              <p>
+                A photon may be absorbed photoelectrically or Compton-scatter in
+                a crystal. If its full energy is eventually contained, it
+                contributes to the photopeak. If a scattered photon escapes,
+                only part of its energy is deposited.
+              </p>
+              <p>
+                For a 511 keV photon, a single Compton interaction can transfer
+                at most about 341 keV to an electron. The corresponding
+                backscattered photon retains about 170 keV. These are different
+                energies, not competing definitions of the same edge.
+              </p>
+              <div class="formula">
+                E′ = E / [1 + (E/mₑc²)(1 − cosθ)]<br />Compton edge = 511 −
+                511/3 keV<br />Energy resolution = FWHM / Epeak
+              </div>
+              <p>
+                Scintillation light is converted to charge by a photosensor such
+                as a SiPM. Integrating the signal estimates deposited energy;
+                timing electronics estimate photon arrival time. A
+                scintillator’s light-decay time is not its coincidence timing
+                resolution.
+              </p>
+              <p>
+                In a multiplexed block, Anger logic estimates position from
+                charge-weighted sensor coordinates: x̂ = Σqᵢxᵢ/Σqᵢ and ŷ =
+                Σqᵢyᵢ/Σqᵢ. A calibrated flood map assigns that estimate to a
+                crystal.
+              </p>
+            </div>
+            <figure class="theorypanel">
+              <div class="theorycontrols">
+                <label
+                  >Example scintillator<select id="crystalSelect">
+                    <option value="LYSO">LYSO</option>
+                    <option value="BGO">BGO</option>
+                    <option value="LaBr3">LaBr₃:Ce</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Lower energy threshold
+                    <output id="energyValue">435 keV</output></span
+                  ><input
+                    id="energyLower"
+                    type="range"
+                    min="350"
+                    max="480"
+                    step="5"
+                    value="435"
+                /></label>
+              </div>
+              <canvas
+                id="energyPlot"
+                width="760"
+                height="360"
+                role="img"
+                aria-label="Illustrative energy spectrum with photopeak, Compton continuum, body-scatter tail and acceptance window"
+              ></canvas>
+              <div class="plotkey">
+                <span class="amber">Full-energy peak</span
+                ><span class="scatter">Body-scatter tail</span
+                ><span class="grey">Crystal escape continuum</span>
+              </div>
+              <div class="theoryreads">
+                <div>
+                  <strong id="energyResolution">—</strong
+                  ><span>Example energy FWHM</span
+                  ><code>resolution × 511 keV</code>
+                </div>
+                <div>
+                  <strong id="peakAcceptance">—</strong
+                  ><span>Photopeak acceptance, singles</span
+                  ><code>∫window Gaussian(E) dE</code>
+                </div>
+                <div>
+                  <strong id="scatterAcceptance">—</strong
+                  ><span>Tail acceptance, singles</span
+                  ><code>∫window toy tail(E) dE</code>
+                </div>
+              </div>
+              <figcaption>
+                <span
+                  >Normalised component densities; upper threshold fixed at 650
+                  keV.</span
+                >
+                <details class="assumptions">
+                  <summary>Figure details</summary>
+                  <p>
+                    The Gaussian peak uses the cited example resolution. The two
+                    continua are analytic illustrations, not a material-specific
+                    transport simulation. Only the photopeak is energy-blurred
+                    in this model.
+                  </p>
+                </details>
+              </figcaption>
+            </figure>
+          </div>
+          <div class="tablebox">
+            <table class="theorytable">
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Density (g/cm³)</th>
+                  <th>Zeff</th>
+                  <th>Light yield (photons/MeV)</th>
+                  <th>Decay (ns)</th>
+                  <th>Energy FWHM at 511 keV</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Material">LYSO</td>
+                  <td data-label="Density (g/cm³)">7.1</td>
+                  <td data-label="Zeff">66</td>
+                  <td data-label="Light yield (photons/MeV)">32,000</td>
+                  <td data-label="Decay (ns)">40</td>
+                  <td data-label="Energy FWHM at 511 keV">12%</td>
+                </tr>
+                <tr>
+                  <td data-label="Material">BGO</td>
+                  <td data-label="Density (g/cm³)">7.1</td>
+                  <td data-label="Zeff">75</td>
+                  <td data-label="Light yield (photons/MeV)">9,000</td>
+                  <td data-label="Decay (ns)">300</td>
+                  <td data-label="Energy FWHM at 511 keV">20%</td>
+                </tr>
+                <tr>
+                  <td data-label="Material">LaBr₃ (5% Ce)</td>
+                  <td data-label="Density (g/cm³)">5.3</td>
+                  <td data-label="Zeff">47</td>
+                  <td data-label="Light yield (photons/MeV)">60,000</td>
+                  <td data-label="Decay (ns)">25</td>
+                  <td data-label="Energy FWHM at 511 keV">10%</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="sourceNote">
+              Historical example values:
+              <a
+                href="https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1393_web.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                >IAEA, Quality Assurance for PET and PET/CT Systems, Table 2
+                (2009)</a
+              >. Composition, size and readout change performance; these are not
+              intrinsic limits or specifications of current commercial scanners.
+              Detector principles:
+              <a
+                href="https://pub.dzne.de/record/258079/files/DZNE-2023-00541.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Zatcepin & Ziegler (2023)</a
+              >.
+            </p>
+          </div>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              An
+              <a
+                class="term"
+                data-term="energy-window"
+                href="../reference/#g-energy-window"
+                >energy window</a
+              >
+              rejects many scattered photons, because scattering lowers photon
+              energy.
+            </li>
+            <li>
+              Energy resolution limits how cleanly the photopeak separates from
+              scatter.
+            </li>
+            <li>
+              A crystal’s light-decay time is not the same as the scanner’s
+              <a class="term" data-term="ctr" href="../reference/#g-ctr"
+                >coincidence timing resolution</a
+              >.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../2-emission/"
+            ><small>Previous</small>Chapter 2 · Positron range and
+            non-collinearity</a
+          ><a class="next" href="../4-coincidences/"
+            ><small>Next</small>Chapter 4 · Coincidences</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

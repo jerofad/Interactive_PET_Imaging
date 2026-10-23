@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Corrections · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Attenuation, CT-based μ-maps, normalisation, scatter and randoms estimation, dead time and decay: what quantitative PET must correct and how."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Corrections" />
+    <meta
+      property="og:description"
+      content="Attenuation, CT-based μ-maps, normalisation, scatter and randoms estimation, dead time and decay: what quantitative PET must correct and how."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="corrections" data-features="theory">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 7 of 10</div>
+          <h1>Corrections</h1>
+          <p class="lead">
+            Raw coincidences are biased by detector efficiency,
+            <a
+              class="term"
+              data-term="attenuation"
+              href="../reference/#g-attenuation"
+              >attenuation</a
+            >, scatter, randoms,
+            <a
+              class="term"
+              data-term="dead-time"
+              href="../reference/#g-dead-time"
+              >dead time</a
+            >
+            and decay. Quantitative PET builds each effect into the
+            reconstruction model.
+          </p>
+        </header>
+
+        <section class="theorysection" id="chapter5">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 7 / Attenuation</div>
+              <h2>
+                Both photons must survive<br />the entire line of response.
+              </h2>
+            </div>
+          </div>
+          <div class="theorygrid">
+            <div class="theorycopy">
+              <p>
+                A photon that interacts before reaching the detector may no
+                longer contribute to a true coincidence. For a uniform path,
+                survival of the pair is the product of survival along the two
+                opposing paths.
+              </p>
+              <div class="formula">
+                Ppair = e⁻µℓ¹ · e⁻µℓ² = e⁻µ(ℓ¹+ℓ²)<br />General case: Ppair =
+                exp(−∫LOR μ dl)<br />Attenuation correction factor = 1/Ppair
+              </div>
+              <p>
+                Move the annihilation point. One photon travels farther and the
+                other travels less, but the total path through the object stays
+                the same. The unscattered-pair survival therefore does not
+                depend on where along that LOR annihilation occurs.
+              </p>
+              <p>
+                CT measures attenuation at X-ray energies. A calibrated, often
+                bilinear transformation maps HU to μ at 511 keV. Its bone slope
+                depends on the acquisition and calibration; it is not a
+                universal conversion.
+              </p>
+              <p>
+                MRI measures a different physical signal and provides no direct
+                511 keV μ-map. Tissue segmentation, specialised MR sequences and
+                learned pseudo-CT/μ-maps bridge the gap. For a learned method,
+                verify bone, air cavities, implants and out-of-distribution
+                anatomy; a plausible image can still give biased PET
+                quantification.
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/28925823/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >An example of learned brain MR attenuation correction</a
+                >.
+              </p>
+              <p class="sourceNote">
+                Water μ and CT scaling:
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/12111133/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Burger et al. (2002)</a
+                >
+                and
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/16696474/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Carney et al. (2006)</a
+                >.
+              </p>
+            </div>
+            <figure class="theorypanel">
+              <div class="theorycontrols">
+                <label
+                  ><span
+                    >Total water path
+                    <output id="pathValue">20 cm</output></span
+                  ><input
+                    id="waterPath"
+                    type="range"
+                    min="5"
+                    max="40"
+                    step="1"
+                    value="20" /></label
+                ><label
+                  ><span
+                    >Annihilation position
+                    <output id="positionValue">50%</output></span
+                  ><input
+                    id="sourcePosition"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="50"
+                /></label>
+              </div>
+              <canvas
+                id="attenPlot"
+                width="760"
+                height="360"
+                role="img"
+                aria-label="Single-photon survival versus annihilation position along a fixed water path, with constant pair survival"
+              ></canvas>
+              <div class="plotkey">
+                <span class="teal">Photon 1</span
+                ><span class="pink">Photon 2</span
+                ><span class="amber">Pair survival</span>
+              </div>
+              <div class="theoryreads">
+                <div>
+                  <strong id="pairRead">—</strong><span>Pair survival</span
+                  ><code>exp(−0.096 · L)</code>
+                </div>
+                <div>
+                  <strong id="acfRead">—</strong><span>Correction factor</span
+                  ><code>exp(+0.096 · L)</code>
+                </div>
+                <div>
+                  <strong id="pathsRead">—</strong
+                  ><span>Photon path lengths, cm</span
+                  ><code>pL and (1 − p)L</code>
+                </div>
+              </div>
+              <figcaption>
+                <span>Uniform water slab, μ = 0.096 cm⁻¹.</span>
+                <details class="assumptions">
+                  <summary>Figure details</summary>
+                  <p>
+                    Unscattered survival only; no detector inefficiency,
+                    scattered coincidences or geometry changes.
+                  </p>
+                </details>
+              </figcaption>
+            </figure>
+          </div>
+          <div class="undergrid">
+            <figure class="theorypanel">
+              <h3>From CT number to a PET μ-map</h3>
+              <div class="theorycontrols">
+                <label
+                  ><span>CT number <output id="huValue">0 HU</output></span
+                  ><input
+                    id="huInput"
+                    type="range"
+                    min="-1000"
+                    max="2000"
+                    step="25"
+                    value="0" /></label
+                ><label
+                  ><span
+                    >Illustrative bone anchor
+                    <output id="boneValue">1000 HU</output></span
+                  ><input
+                    id="boneAnchor"
+                    type="range"
+                    min="700"
+                    max="1800"
+                    step="50"
+                    value="1000"
+                /></label>
+              </div>
+              <canvas
+                id="huPlot"
+                width="640"
+                height="320"
+                role="img"
+                aria-label="Illustrative bilinear conversion from CT Hounsfield units to attenuation coefficient at 511 keV"
+              ></canvas>
+              <div class="theoryreads">
+                <div>
+                  <strong id="muRead">—</strong><span>Converted μ</span
+                  ><code>piecewise linear map · cm⁻¹</code>
+                </div>
+              </div>
+              <figcaption>
+                <span
+                  >Chosen calibration anchors: air (−1000 HU, 0), water (0 HU,
+                  0.096 cm⁻¹), bone (slider HU, 0.172 cm⁻¹).</span
+                >
+                <details class="assumptions">
+                  <summary>Figure details</summary>
+                  <p>
+                    Below water: 0.096(1 + HU/1000). Above water: 0.096 + (0.172
+                    − 0.096)HU/HUbone. This example is not a scanner
+                    calibration.
+                  </p>
+                </details>
+              </figcaption>
+            </figure>
+            <div class="theorypanel">
+              <h3>The consequence in the embedded phantom</h3>
+              <p class="theoryhint">
+                One fixed, noiseless acquisition. Thirty MLEM iterations; only
+                attenuation modelling changes. These images use the embedded
+                water-equivalent head and are independent of the slab and HU
+                controls.
+              </p>
+              <div class="twoplots">
+                <figure class="smallscan">
+                  <h3>Attenuation omitted</h3>
+                  <canvas
+                    id="acOff"
+                    width="256"
+                    height="256"
+                    role="img"
+                    aria-label="Synthetic brain reconstruction without attenuation correction"
+                  ></canvas>
+                  <div class="colorbar">
+                    <div class="ramp"></div>
+                    <div class="ticks"><span>0</span><span>≥7 a.u.</span></div>
+                  </div>
+                </figure>
+                <figure class="smallscan">
+                  <h3>Attenuation modelled</h3>
+                  <canvas
+                    id="acOn"
+                    width="256"
+                    height="256"
+                    role="img"
+                    aria-label="Synthetic brain reconstruction with attenuation correction"
+                  ></canvas>
+                  <div class="colorbar">
+                    <div class="ramp"></div>
+                    <div class="ticks"><span>0</span><span>≥7 a.u.</span></div>
+                  </div>
+                </figure>
+              </div>
+              <p id="acStatus" class="caption" role="status">
+                Preparing the matched reconstruction comparison…
+              </p>
+              <a
+                class="theorybutton"
+                href="../labs/reconstruction/?preset=attenuation"
+                >Try attenuation on and off in the lab</a
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="theorysection" id="other-corrections">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 7 / The other corrections</div>
+              <h2>Every effect gets a model.</h2>
+            </div>
+            <p>
+              Attenuation is the largest correction. The others are smaller, but
+              quantitative PET needs all of them.
+            </p>
+          </div>
+          <div class="undergrid cards">
+            <div class="box">
+              <h3>Normalisation</h3>
+              <p>
+                Detector pairs differ in efficiency because of crystal quality,
+                geometry and electronics. A scan of a uniform source measures
+                these differences. Component-based methods split them into
+                crystal efficiencies and geometric factors, so fewer counts are
+                needed for a precise estimate.
+              </p>
+              <p class="sourceNote">
+                <a
+                  href="https://doi.org/10.1088/0031-9155/44/2/020"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Badawi &amp; Marsden (1999)</a
+                >. The labs use a known efficiency pattern instead of a measured
+                one.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Scatter estimation</h3>
+              <p>
+                Scattered photons follow broken paths, so they add counts to the
+                wrong lines. Single-scatter simulation computes the expected
+                scatter from the current activity estimate and the attenuation
+                map. It is then scaled to the measured counts in the sinogram
+                tails outside the body.
+              </p>
+              <p class="sourceNote">
+                <a
+                  href="https://doi.org/10.1109/23.873020"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Watson (2000)</a
+                >. The labs subtract the exact simulated scatter, so their
+                scatter correction is ideal.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Randoms estimation</h3>
+              <p>
+                A delayed coincidence window shifts one detector’s timestamps
+                far beyond the prompt window, so only accidental pairs remain.
+                Alternatively, randoms can be estimated from the singles rates
+                with R = 2τS₁S₂. The delayed-window estimate carries its own
+                Poisson noise, which is why NECR uses 2R.
+              </p>
+              <p class="sourceNote">
+                <a
+                  href="https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1393_web.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >IAEA, Quality Assurance for PET and PET/CT Systems (2009)</a
+                >.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Dead time and decay</h3>
+              <p>
+                At high count rates, detectors and electronics miss events while
+                they are busy. Dead-time correction scales the measured rate by
+                a model of the losses. It restores the expected count level but
+                not the statistics of the lost events.
+              </p>
+              <p>
+                Decay correction refers every frame to one reference time, as in
+                <a href="../1-tracers/">Chapter 1</a>.
+              </p>
+            </div>
+            <div class="box">
+              <h3>PET/CT and PET/MR</h3>
+              <p>
+                In PET/CT, the CT image is converted to a 511 keV
+                <a class="term" data-term="mu-map" href="../reference/#g-mu-map"
+                  >μ-map</a
+                >
+                with a calibrated, usually bilinear mapping. PET and CT are
+                acquired one after the other, so motion between them misaligns
+                the map (see <a href="../10-artifacts/">Chapter 10</a>).
+              </p>
+              <p>
+                MRI does not measure photon attenuation. PET/MR relies on tissue
+                segmentation, atlases or learned pseudo-CT images, which need
+                careful checks in bone, air cavities and implants.
+              </p>
+              <p class="sourceNote">
+                <a
+                  href="https://doi.org/10.1118/1.598392"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Kinahan et al. (1998)</a
+                >
+                ·
+                <a
+                  href="https://doi.org/10.1053/j.semnuclmed.2008.01.003"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Townsend (2008)</a
+                >.
+              </p>
+            </div>
+          </div>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              Pair survival depends on the total path through the body along the
+              line, not on where along it the annihilation happened.
+            </li>
+            <li>
+              Normalisation and attenuation multiply the expected counts.
+              Scatter and randoms add to them.
+            </li>
+            <li>
+              Every correction is only as good as the model and the measurements
+              behind it.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../6-tof/"
+            ><small>Previous</small>Chapter 6 · Time of flight</a
+          ><a class="next" href="../8-reconstruction/"
+            ><small>Next</small>Chapter 8 · Reconstruction</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

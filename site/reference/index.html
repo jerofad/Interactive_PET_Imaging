@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Reference · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Parameter trade-offs, a glossary of PET terms, the model assumptions behind every experiment, and the primary references."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Reference" />
+    <meta
+      property="og:description"
+      content="Parameter trade-offs, a glossary of PET terms, the model assumptions behind every experiment, and the primary references."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="reference" data-features="">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="./" aria-current="page">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Reference</div>
+          <h1>Reference</h1>
+          <p class="lead">
+            Look things up here: what each design choice costs, what each term
+            means, and what the models assume.
+          </p>
+        </header>
+
+        <section id="tradeoffs">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Reference / Parameter trade-offs</div>
+              <h2>Every gain comes with a condition.</h2>
+            </div>
+            <p>
+              Direction of effect under stated assumptions. These are design
+              relationships, not acquisition prescriptions.
+            </p>
+          </div>
+          <div
+            class="p4tablewrap"
+            tabindex="0"
+            role="region"
+            aria-label="PET parameter trade-offs table"
+          >
+            <table class="p4table">
+              <caption>
+                Read across for the benefit, its cost and the assumption behind
+                it.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Parameter change</th>
+                  <th scope="col">Potential benefit</th>
+                  <th scope="col">Cost or limitation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Injected activity ↑</th>
+                  <td data-label="Potential benefit">
+                    More true coincidences in the low count-rate regime.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Greater radiation exposure; randoms and dead-time losses
+                    rise. More activity need not improve NECR beyond its peak.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Energy window narrower</th>
+                  <td data-label="Potential benefit">
+                    Rejects more scattered photons.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Loses accepted true events too; the balance depends on
+                    energy resolution and object scatter.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Coincidence window narrower</th>
+                  <td data-label="Potential benefit">
+                    Fewer accidental pairs; R scales with the full window width
+                    for fixed singles rates.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Can reject true events if narrower than timing uncertainty
+                    and geometric delays allow.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">TOF timing FWHM ↓</th>
+                  <td data-label="Potential benefit">
+                    Better localisation along the LOR; approximate effective
+                    sensitivity gain D/Δx for a uniform object when Δx &lt; D.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Requires suitable detectors and electronics. TOF gain is
+                    task- and object-dependent, and is not a direct
+                    transverse-resolution improvement.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Crystal width ↓</th>
+                  <td data-label="Potential benefit">
+                    Finer spatial sampling and potentially better intrinsic
+                    resolution.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    More channels, cost and readout complexity; light
+                    collection, stopping power and packing also matter.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">DOI information ↑</th>
+                  <td data-label="Potential benefit">
+                    Reduces uncertainty from oblique interactions, especially
+                    off-axis.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Detector complexity and trade-offs in energy, timing or
+                    light collection depend on the design.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Axial field of view ↑</th>
+                  <td data-label="Potential benefit">
+                    More solid-angle coverage and more anatomy observed
+                    simultaneously. Integrated yield can grow approximately as
+                    L² for a uniform extended source in a short-scanner regime.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Not a universal sensitivity law: ideal central-point
+                    geometric acceptance is L/√(D² + L²), which saturates.
+                    Attenuation, ring differences, source extent and bed
+                    coverage change the gain; longer systems need more detector
+                    material.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Scan time ↑</th>
+                  <td data-label="Potential benefit">
+                    More counts; ideal counting noise decreases as 1/√time for a
+                    stationary, constant-rate acquisition.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Motion, radioactive decay and tracer kinetics limit the
+                    simple scaling; patient comfort and throughput matter.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Iterations / subsets ↑</th>
+                  <td data-label="Potential benefit">
+                    More updates can recover contrast sooner.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    More noise and potential edge artifacts. Subsets change
+                    convergence behaviour; equal iteration × subset products do
+                    not ensure identical images.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Post-filter FWHM ↑</th>
+                  <td data-label="Potential benefit">
+                    Smoother appearance and lower high-frequency noise.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Reduced effective resolution and small-object contrast;
+                    SUVmax and partial-volume recovery change.
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">PSF modelling enabled</th>
+                  <td data-label="Potential benefit">
+                    May improve resolution and contrast recovery with an
+                    appropriate model.
+                  </td>
+                  <td data-label="Cost or limitation">
+                    Edge overshoot, spatially varying convergence and bias from
+                    mismatch. Reconstruction settings alter quantitative
+                    comparability.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="caption" style="margin-top: 14px">
+            L = active axial length; D = ring diameter. The central-point
+            expression is an ideal open cylinder’s geometric solid-angle
+            fraction, before attenuation and detector efficiency. The L²
+            statement combines roughly linear local acceptance with linearly
+            increasing illuminated source extent; it is a limited-regime
+            derivation, not a fitted scanner specification.
+          </p>
+        </section>
+        <section id="glossary">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Reference / Glossary</div>
+              <h2>Terms used on this site.</h2>
+            </div>
+            <p>
+              Underlined terms in the chapters link here and show these
+              definitions on hover or keyboard focus.
+            </p>
+          </div>
+          <dl class="glossary">
+            <div id="g-annihilation">
+              <dt>Annihilation</dt>
+              <dd>
+                A positron and an electron convert into, most often, two photons
+                of about 511 keV each.
+              </dd>
+            </div>
+            <div id="g-attenuation">
+              <dt>Attenuation</dt>
+              <dd>
+                Loss of photons from a line of response by absorption or
+                scattering in the body.
+              </dd>
+            </div>
+            <div id="g-ctr">
+              <dt>CTR</dt>
+              <dd>
+                Coincidence timing resolution: the FWHM of the measured
+                arrival-time difference for true pairs.
+              </dd>
+            </div>
+            <div id="g-dead-time">
+              <dt>Dead time</dt>
+              <dd>
+                Time during which a detector or its electronics cannot record a
+                new event.
+              </dd>
+            </div>
+            <div id="g-doi">
+              <dt>DOI</dt>
+              <dd>
+                Depth of interaction: where along the crystal depth the photon
+                interacted. Knowing it reduces parallax blur.
+              </dd>
+            </div>
+            <div id="g-energy-window">
+              <dt>Energy window</dt>
+              <dd>
+                The accepted range of measured photon energies, for example
+                435–650 keV.
+              </dd>
+            </div>
+            <div id="g-fbp">
+              <dt>FBP</dt>
+              <dd>
+                Filtered backprojection: an analytic reconstruction that
+                ramp-filters projections and smears them back.
+              </dd>
+            </div>
+            <div id="g-fwhm">
+              <dt>FWHM</dt>
+              <dd>
+                Full width at half maximum: the width of a peak at half its
+                height.
+              </dd>
+            </div>
+            <div id="g-half-life">
+              <dt>Half-life</dt>
+              <dd>
+                The time for half of the radioactive nuclei in a sample to
+                decay.
+              </dd>
+            </div>
+            <div id="g-list-mode">
+              <dt>List mode</dt>
+              <dd>
+                Storage of each coincidence as a record with its detector pair,
+                time and often energy.
+              </dd>
+            </div>
+            <div id="g-lor">
+              <dt>LOR</dt>
+              <dd>
+                Line of response: the line between the two detectors that
+                recorded a coincidence.
+              </dd>
+            </div>
+            <div id="g-michelogram">
+              <dt>Michelogram</dt>
+              <dd>
+                A map of detector-ring pairs showing which axial combinations
+                are accepted and how they are grouped.
+              </dd>
+            </div>
+            <div id="g-mlem">
+              <dt>MLEM</dt>
+              <dd>
+                Maximum-likelihood expectation maximisation: an iterative
+                reconstruction for Poisson data using all projections per
+                update.
+              </dd>
+            </div>
+            <div id="g-necr">
+              <dt>NECR</dt>
+              <dd>
+                Noise-equivalent count rate, T²/(T+S+2R): a count-rate figure of
+                merit that penalises scatter and randoms.
+              </dd>
+            </div>
+            <div id="g-non-collinearity">
+              <dt>Non-collinearity</dt>
+              <dd>
+                The small deviation of the two annihilation photons from exactly
+                180°, about 0.5° FWHM.
+              </dd>
+            </div>
+            <div id="g-normalisation">
+              <dt>Normalisation</dt>
+              <dd>Correction for unequal efficiency between detector pairs.</dd>
+            </div>
+            <div id="g-osem">
+              <dt>OSEM</dt>
+              <dd>
+                Ordered-subset EM: MLEM that updates the image with interleaved
+                subsets of projection angles.
+              </dd>
+            </div>
+            <div id="g-partial-volume">
+              <dt>Partial-volume effect</dt>
+              <dd>
+                Loss of apparent contrast in objects that are small relative to
+                the resolution, through spill-out and spill-in.
+              </dd>
+            </div>
+            <div id="g-patlak">
+              <dt>Patlak analysis</dt>
+              <dd>
+                A graphical method that estimates the net influx rate Ki of an
+                irreversibly trapped tracer.
+              </dd>
+            </div>
+            <div id="g-positron-range">
+              <dt>Positron range</dt>
+              <dd>The distance a positron travels before it annihilates.</dd>
+            </div>
+            <div id="g-prompt-gamma">
+              <dt>Prompt gamma</dt>
+              <dd>
+                A gamma ray emitted together with the positron by some isotopes,
+                such as Ga-68 and Rb-82.
+              </dd>
+            </div>
+            <div id="g-psf">
+              <dt>PSF</dt>
+              <dd>
+                Point-spread function: the image of a point source. PSF
+                modelling includes it in the system matrix.
+              </dd>
+            </div>
+            <div id="g-radiotracer">
+              <dt>Radiotracer</dt>
+              <dd>
+                A biologically active molecule labelled with a radioactive
+                isotope.
+              </dd>
+            </div>
+            <div id="g-randoms">
+              <dt>Randoms</dt>
+              <dd>
+                Accidental coincidences between photons from two unrelated
+                annihilations.
+              </dd>
+            </div>
+            <div id="g-scatter">
+              <dt>Scatter</dt>
+              <dd>
+                Coincidences in which at least one photon changed direction in
+                the body before detection.
+              </dd>
+            </div>
+            <div id="g-scintillator">
+              <dt>Scintillator</dt>
+              <dd>
+                A crystal that converts deposited gamma-ray energy into a pulse
+                of visible light.
+              </dd>
+            </div>
+            <div id="g-sinogram">
+              <dt>Sinogram</dt>
+              <dd>
+                A histogram of coincidences indexed by line position s and angle
+                φ.
+              </dd>
+            </div>
+            <div id="g-sipm">
+              <dt>SiPM</dt>
+              <dd>
+                Silicon photomultiplier: a solid-state sensor that converts
+                scintillation light into an electrical pulse.
+              </dd>
+            </div>
+            <div id="g-suv">
+              <dt>SUV</dt>
+              <dd>
+                Standardised uptake value: tissue activity concentration divided
+                by injected activity per body weight.
+              </dd>
+            </div>
+            <div id="g-suvr">
+              <dt>SUVR</dt>
+              <dd>
+                SUV ratio: mean uptake in a target region divided by mean uptake
+                in a reference region.
+              </dd>
+            </div>
+            <div id="g-system-matrix">
+              <dt>System matrix</dt>
+              <dd>
+                The model A whose element Aij is the expected contribution of
+                voxel j to measurement bin i.
+              </dd>
+            </div>
+            <div id="g-tof">
+              <dt>TOF</dt>
+              <dd>
+                Time of flight: using the photons’ arrival-time difference to
+                localise an event along its line of response.
+              </dd>
+            </div>
+            <div id="g-trues">
+              <dt>Trues</dt>
+              <dd>
+                Coincidences from one annihilation whose two photons both
+                reached the detectors unscattered.
+              </dd>
+            </div>
+            <div id="g-mu-map">
+              <dt>μ-map</dt>
+              <dd>
+                An image of linear attenuation coefficients at 511 keV, used for
+                attenuation correction.
+              </dd>
+            </div>
+          </dl>
+        </section>
+        <section id="methods">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Reference / Model notes and sources</div>
+              <h2>Built on explicit assumptions.</h2>
+            </div>
+          </div>
+          <div class="methodgrid">
+            <div>
+              <h3>Scope of this notebook</h3>
+              <p style="margin-top: 14px">
+                The embedded volume is an original analytic phantom. Ellipsoids,
+                periodic folds and assigned tissue labels define its anatomy. GM
+                : WM = 4 : 1, zero CSF activity and lesion activities are
+                teaching inputs, not universal physiological ratios. Activity is
+                in arbitrary units, not SUV.
+              </p>
+              <p>
+                The reconstruction lab uses one block-averaged axial slice and
+                an ideal 2D parallel-beam geometry. Exact simulated attenuation,
+                efficiency, scatter and randoms are available to the
+                reconstruction. The main reconstruction lab has no
+                scanner-specific calibration, Monte Carlo transport, TOF, PSF,
+                motion, decay or 3D reconstruction. Separate experiments cover
+                TOF, decay, motion and PSF mismatch. The rotating MIP projects
+                assigned 3D activity; it does not add a 3D reconstruction model.
+              </p>
+              <p>
+                The count sweep reconstructs noisy projections. Its relative
+                counting-noise readout, √(10⁶/N), describes ideal count scaling
+                relative to 10⁶ prompts; it is not a measured image-noise or
+                NECR metric.
+              </p>
+              <p>
+                Numerical and worker checks cover the projection engine and
+                teaching models. Further checks cover sphere recovery, unit
+                conversion, positron fractions, detector capture and count-rate
+                scaling. They run as part of the automated test suite.
+              </p>
+              <p>
+                Chapters 1–6 add independent teaching models for decay, range,
+                detection, count rates, attenuation and TOF. Only the explicit
+                “Try attenuation on and off in the lab” link changes
+                reconstruction-lab settings. Later chapters add reconstruction
+                statistics, partial-volume recovery, hypothetical SUV/SUVR,
+                eight artifact modes and a rotating MIP. The four 3D scenes add
+                recording formats, fullscreen and text fallbacks.
+              </p>
+            </div>
+            <div>
+              <h3>Primary references</h3>
+              <ul>
+                <li>
+                  <a
+                    href="https://doi.org/10.1118/1.595715"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Siddon (1985)</a
+                  >
+                  — exact ray intersections with a voxel grid.
+                </li>
+                <li>
+                  <a
+                    href="https://doi.org/10.1109/TMI.1982.4307558"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Shepp & Vardi (1982)</a
+                  >
+                  — maximum-likelihood emission reconstruction.
+                </li>
+                <li>
+                  <a
+                    href="https://pubmed.ncbi.nlm.nih.gov/18218538/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Hudson & Larkin (1994)</a
+                  >
+                  — ordered-subset EM.
+                </li>
+                <li>
+                  <a
+                    href="https://www.slaney.org/pct/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Kak & Slaney, Principles of Computerized Tomographic
+                    Imaging</a
+                  >
+                  — filtered backprojection.
+                </li>
+                <li>
+                  <a
+                    href="https://statmath.wu.ac.at/papers/92-04-13.wh.abs.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Hörmann (1993)</a
+                  >
+                  — transformed-rejection Poisson sampling.
+                </li>
+                <li>
+                  <a
+                    href="https://pml.nist.gov/PhysRefData/XrayMassCoef/ComTab/water.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >NIST water attenuation tables</a
+                  >
+                  — basis for the approximate water-equivalent μ.
+                </li>
+                <li>
+                  <a
+                    href="https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1605_web.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >IAEA Human Health Reports No. 9</a
+                  >
+                  — PET/CT counting statistics and image quality.
+                </li>
+                <li>
+                  Phantom tissue activities: grey matter 4, white matter 1,
+                  scalp 0.5, CSF and skull 0, hot spheres 7 a.u.
+                </li>
+                <li>
+                  <a
+                    href="https://brainweb.bic.mni.mcgill.ca/brainweb/anatomic_normal.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >BrainWeb tissue-based models</a
+                  >
+                  — background reading; not the source of this phantom.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../labs/viewer/"
+            ><small>Previous</small>Phantom viewer</a
+          ><span></span>
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

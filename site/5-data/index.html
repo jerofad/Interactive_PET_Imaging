@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>From coincidences to data · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="How lines of response become sinogram coordinates, why a point traces a sine curve, list mode versus sinograms, and Michelograms."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="From coincidences to data" />
+    <meta
+      property="og:description"
+      content="How lines of response become sinogram coordinates, why a point traces a sine curve, list mode versus sinograms, and Michelograms."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="data" data-features="scenes">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 5 of 10</div>
+          <h1>From coincidences to data</h1>
+          <p class="lead">
+            Each coincidence is either stored as an event record (<a
+              class="term"
+              data-term="list-mode"
+              href="../reference/#g-list-mode"
+              >list mode</a
+            >) or added to a histogram indexed by the line’s position and angle:
+            the
+            <a class="term" data-term="sinogram" href="../reference/#g-sinogram"
+              >sinogram</a
+            >.
+          </p>
+        </header>
+
+        <section id="sinogram-bench" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">
+                Chapter 5 / From annihilation to sinogram
+              </div>
+              <h2>A line becomes a coordinate.</h2>
+            </div>
+            <p>
+              Trace a point source through projection space, inspect list-mode
+              records, then connect axial detector pairs.
+            </p>
+          </div>
+          <div class="recordbar" aria-label="Sinogram bench recording controls">
+            <label class="recordOption"
+              >Frame
+              <select id="benchAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="benchClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="benchFullscreen">
+              Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="benchRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="benchGL"
+                class="sceneGL"
+                aria-label="Three-dimensional activity plane, sinogram plane and axial detector-ring diagram"
+                role="img"
+              ></canvas
+              ><canvas
+                id="benchHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="benchFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="benchPlay" class="primary" aria-pressed="false">
+                Play bench</button
+              ><label
+                >Act
+                <select id="benchAct">
+                  <option value="0">1 · Line integral</option>
+                  <option value="1">2 · Point-source sine trace</option>
+                  <option value="2">3 · List mode or sinogram</option>
+                  <option value="3">4 · Direct and oblique planes</option>
+                </select></label
+              ><label
+                ><input id="benchLoop" type="checkbox" checked /> Loop all
+                acts</label
+              >
+            </div>
+            <div class="sceneSettings">
+              <label
+                ><span
+                  >Projection angle φ
+                  <output id="benchAngleValue">35 °</output></span
+                ><input
+                  id="benchAngle"
+                  type="range"
+                  min="0"
+                  max="179"
+                  step="1"
+                  value="35" /></label
+              ><label
+                ><span
+                  >Radial coordinate s
+                  <output id="benchOffsetValue">24 mm</output></span
+                ><input
+                  id="benchOffset"
+                  type="range"
+                  min="-128"
+                  max="128"
+                  step="2"
+                  value="24" /></label
+              ><label
+                >Source<select id="benchSource">
+                  <option value="phantom" selected>Phantom slice</option>
+                  <option value="point">Single point at R +34, A +22 mm</option>
+                </select></label
+              ><label
+                ><span
+                  >Maximum ring difference
+                  <output id="benchRingDifferenceValue">4 </output></span
+                ><input
+                  id="benchRingDifference"
+                  type="range"
+                  min="0"
+                  max="8"
+                  step="1"
+                  value="4" /></label
+              ><label
+                >Axial span<select id="benchSpan">
+                  <option value="1">1</option>
+                  <option value="3" selected>3</option>
+                  <option value="5">5</option>
+                </select></label
+              >
+            </div>
+          </div>
+          <div class="formula">
+            s = x cosφ + y sinφ · each sinogram value is ∫ x(r) dl<br />For a
+            fixed off-centre point, changing φ traces a sinusoid.
+          </div>
+          <dl class="sceneReadouts">
+            <div>
+              <dt>Sampled lines / angles</dt>
+              <dd id="benchLORs">—</dd>
+              <dd class="note">120 angles × 129 radial bins</dd>
+            </div>
+            <div>
+              <dt>Radial spacing / angular step</dt>
+              <dd id="benchSampling">—</dd>
+              <dd class="note">fixed 2 mm / 180° ÷ 120</dd>
+            </div>
+            <div>
+              <dt>Detector crystals / hardware bin suggestion</dt>
+              <dd id="benchHardware">—</dd>
+              <dd class="note">round(πD/d) × round(L/d) / d÷2</dd>
+            </div>
+            <div>
+              <dt>2D sinogram / example list-mode size</dt>
+              <dd id="benchSizes">—</dd>
+              <dd class="note">4 bytes/bin / assumed 24 bytes/event</dd>
+            </div>
+            <div>
+              <dt>Valid ring pairs / grouped planes</dt>
+              <dd id="benchAxial">—</dd>
+              <dd class="note">9-ring toy map; segment and ring sum</dd>
+            </div>
+            <div>
+              <dt>Current line integral</dt>
+              <dd id="benchIntegral">—</dd>
+              <dd class="note">Siddon sample nearest (s, φ)</dd>
+            </div>
+          </dl>
+          <div class="sceneDiagnostics">
+            <figure class="scenePanel">
+              <h3>Activity input</h3>
+              <canvas
+                id="benchSlice"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Activity input, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="benchSliceMax">7 a.u.</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3>Projection space</h3>
+              <canvas
+                id="benchSino"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Projection space, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="benchSinoMax">— a.u.·cm</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3>Michelogram · nine example rings</h3>
+              <canvas
+                id="benchMichelogram"
+                class="sceneImage"
+                width="384"
+                height="384"
+                role="img"
+                aria-label="Michelogram showing allowed detector ring pairs and axial segments"
+              ></canvas>
+              <figcaption class="caption">
+                Ring i horizontally; ring j vertically. Diagonal = direct pairs.
+                Teal = central segment; amber / magenta = signed oblique
+                segments. Empty cells fail the ring-difference limit.
+              </figcaption>
+            </figure>
+          </div>
+          <details class="sceneDetails">
+            <summary>List mode: recent simulated event records</summary>
+            <div class="p4tablewrap" tabindex="0">
+              <table class="p4table">
+                <thead>
+                  <tr>
+                    <th>Class</th>
+                    <th>Crystal i</th>
+                    <th>Crystal j</th>
+                    <th>Illustration time (s)</th>
+                    <th>Δt (ns)</th>
+                    <th>E₁ / E₂ (keV)</th>
+                  </tr>
+                </thead>
+                <tbody id="eventTable">
+                  <tr>
+                    <td colspan="6">
+                      Event records appear when the scanner scene plays. Try it
+                      in <a href="../4-coincidences/">Chapter 4</a> or the
+                      <a href="../labs/scanner/">scanner lab</a>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="caption">
+              The event table stores illustrated accepted pairs. The diagnostic
+              sinogram is a separate 2D acquisition. Displayed timestamps are
+              accelerated presentation times, not scanner list-mode time tags.
+              The 24-byte packet estimate is an assumed example, excluding
+              headers.
+            </p>
+          </details>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              Direct pairs join the same detector ring; oblique pairs connect
+              different rings. Maximum ring difference limits accepted
+              obliquity. Odd span groups adjacent ring differences into
+              segments; this toy map also groups by ring-index sum. Compression
+              reduces storage and axial detail. The 3D stack uses nine actual
+              phantom slices from z = −57 to +71 mm; diagram spacing is
+              illustrative. This is a teaching layout, not a vendor sinogram
+              address map.
+              <a
+                href="https://tech.snmjournals.org/content/30/2/39"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Axial sampling and Michelograms</a
+              >.
+            </p>
+          </details>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              A sinogram coordinate (s, φ) identifies one line of response. Each
+              bin holds a line integral of activity.
+            </li>
+            <li>
+              A point source traces a sine curve through the sinogram, which
+              gives it its name.
+            </li>
+            <li>
+              List mode keeps each event’s time and energy. Sinograms are
+              compact but lose that detail.
+            </li>
+            <li>
+              A
+              <a
+                class="term"
+                data-term="michelogram"
+                href="../reference/#g-michelogram"
+                >Michelogram</a
+              >
+              shows which detector-ring pairs are accepted and how they are
+              grouped.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../4-coincidences/"
+            ><small>Previous</small>Chapter 4 · Coincidences</a
+          ><a class="next" href="../6-tof/"
+            ><small>Next</small>Chapter 6 · Time of flight</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

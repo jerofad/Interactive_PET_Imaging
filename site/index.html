@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="An interactive guide to the PET pipeline: radiotracers, positron physics, detection, coincidences, data, corrections, reconstruction, image quality and artifacts, built on a synthetic brain phantom."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="From Decay to Voxel" />
+    <meta
+      property="og:description"
+      content="An interactive guide to the PET pipeline: radiotracers, positron physics, detection, coincidences, data, corrections, reconstruction, image quality and artifacts, built on a synthetic brain phantom."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="home" data-features="lab">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="./"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="labs/scanner/">Scanner lab</a></li>
+          <li><a href="labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+
+        <section class="landing">
+          <div class="intro">
+            <div>
+              <div class="eyebrow">
+                An interactive guide to positron emission tomography
+              </div>
+              <h1>
+                From decay<br />to
+                <span style="color: var(--activity)">voxel.</span>
+              </h1>
+            </div>
+            <p>
+              A PET scanner detects pairs of photons. From millions of such
+              events, it infers where a tracer went. Follow that signal through
+              ten stages, each with a working model you can change.
+            </p>
+          </div>
+          <ol
+            class="pipelinemap"
+            aria-label="The PET pipeline, chapter by chapter"
+          >
+            <li>
+              <a href="1-tracers/"
+                ><span class="num">1</span><strong>Tracer</strong
+                ><span
+                  >A labelled molecule accumulates where the biology takes
+                  it.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="2-emission/"
+                ><span class="num">2</span><strong>Emission</strong
+                ><span
+                  >A positron travels, annihilates, and two photons leave.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="3-detection/"
+                ><span class="num">3</span><strong>Detection</strong
+                ><span
+                  >Crystals turn each photon into a timed pulse with an
+                  energy.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="4-coincidences/"
+                ><span class="num">4</span><strong>Coincidence</strong
+                ><span
+                  >Pairs within a few nanoseconds become lines of
+                  response.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="5-data/"
+                ><span class="num">5</span><strong>Data</strong
+                ><span
+                  >Lines are binned into sinograms or kept as list mode.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="6-tof/"
+                ><span class="num">6</span><strong>Time of flight</strong
+                ><span
+                  >Arrival-time differences narrow each line to a segment.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="7-corrections/"
+                ><span class="num">7</span><strong>Corrections</strong
+                ><span
+                  >Attenuation, scatter, randoms and efficiency enter the
+                  model.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="8-reconstruction/"
+                ><span class="num">8</span><strong>Reconstruction</strong
+                ><span
+                  >An iterative fit finds activity that explains the
+                  counts.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="9-image-quality/"
+                ><span class="num">9</span><strong>Image quality</strong
+                ><span
+                  >Resolution and noise limit what an uptake number means.</span
+                ></a
+              >
+            </li>
+            <li>
+              <a href="10-artifacts/"
+                ><span class="num">10</span><strong>Artifacts</strong
+                ><span
+                  >Model mismatches leave recognisable fingerprints.</span
+                ></a
+              >
+            </li>
+          </ol>
+          <div class="paths">
+            <a class="pathcard primarypath" href="1-tracers/"
+              ><small>Start here</small><strong>Read the guided tour</strong
+              ><span
+                >Ten short chapters in pipeline order, from tracer to
+                artifacts.</span
+              ></a
+            ><a class="pathcard" href="labs/scanner/"
+              ><small>Hands on</small><strong>Open a lab</strong
+              ><span
+                >A 3D scanner, a reconstruction lab and a phantom viewer.</span
+              ></a
+            ><a class="pathcard" href="reference/"
+              ><small>Look it up</small><strong>Reference</strong
+              ><span
+                >Trade-offs, a glossary, model assumptions and sources.</span
+              ></a
+            >
+          </div>
+        </section>
+        <section class="teaser">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Try it now</div>
+              <h2>How many counts does an image need?</h2>
+            </div>
+            <p>
+              Drag the count budget and watch the same slice reconstructed from
+              a new simulated acquisition. The full
+              <a href="labs/reconstruction/">reconstruction lab</a> adds
+              algorithms and corrections.
+            </p>
+          </div>
+          <div class="hero" id="counts">
+            <figure class="scanhero">
+              <div class="scanhead">
+                <span id="heroInputLabel">AXIAL / z = +7 mm</span
+                ><strong>SYNTHETIC PHANTOM</strong>
+              </div>
+              <div class="heroimage">
+                <canvas
+                  id="heroCanvas"
+                  width="512"
+                  height="512"
+                  role="img"
+                  aria-label="Reconstruction from the simulated measured sinogram"
+                ></canvas
+                ><span class="orient n">A</span><span class="orient s">P</span
+                ><span class="orient w">R</span><span class="orient e">L</span>
+              </div>
+              <div class="colorbar">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span>3.5</span><span>≥ 7 a.u.</span>
+                </div>
+              </div>
+              <figcaption id="heroFigureCaption">
+                Reconstruction from simulated projection counts.
+              </figcaption>
+              <div class="heroStatus" id="heroStatus">
+                Preparing the reconstruction…
+              </div>
+            </figure>
+            <div class="controls">
+              <div class="eyebrow">Experiment / Counts become detail</div>
+              <h2>Every count carries information.</h2>
+              <p>
+                Move through five orders of magnitude. More counts make the
+                activity pattern easier to distinguish from noise.
+              </p>
+              <div class="count" id="countReadout">100,000</div>
+              <div class="countlabel">
+                expected prompt counts in this 2D acquisition
+              </div>
+              <label class="sliderlabel" for="countSlider"
+                ><span>Count budget <span class="mono">N</span></span
+                ><output id="powerReadout">10⁵</output></label
+              ><input
+                id="countSlider"
+                type="range"
+                min="3"
+                max="8"
+                value="5"
+                step="0.025"
+              />
+              <div class="rangeends">
+                <span>10³ / sparse</span><span>10⁸ / dense</span>
+              </div>
+              <div class="buttonrow">
+                <button class="primary" id="play">Play count sweep</button
+                ><button id="reset">Reset</button
+                ><button id="reference" aria-pressed="false">
+                  Show noiseless
+                </button>
+              </div>
+              <div class="stats">
+                <div class="stat">
+                  <strong id="noiseReadout">3.16×</strong
+                  ><span>relative counting noise</span
+                  ><span class="mono">√(10⁶ / N)</span>
+                </div>
+                <div class="stat">
+                  <strong id="realised">—</strong
+                  ><span>measured prompt counts</span
+                  ><span class="mono">Σᵢ yᵢ</span>
+                </div>
+              </div>
+              <div class="notice">
+                2D simulation: Poisson counts are sampled in sinogram space,
+                then reconstructed with OSEM. The reconstruction lab lets you
+                change the algorithm. Each sweep step is a separate seeded
+                acquisition.
+              </div>
+            </div>
+          </div>
+          <div class="key" aria-label="Consistent figure colour key">
+            <span><i></i>Activity</span
+            ><span><i class="phot"></i>Photons / LORs</span
+            ><span><i class="det"></i>Detectors</span
+            ><span><i class="scat"></i>Scatter — dashed</span
+            ><span><i class="rand"></i>Randoms · dotted</span
+            ><span><i class="anat"></i>Anatomy</span>
+          </div>
+        </section>
+
+        <nav class="pager" aria-label="Previous and next">
+          <span></span
+          ><a class="next" href="1-tracers/"
+            ><small>Next</small>Chapter 1 · Radiotracers and decay</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

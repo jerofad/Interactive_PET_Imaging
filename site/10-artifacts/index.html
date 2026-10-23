@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Artifacts · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Motion, attenuation-map errors, truncation, metal and MR voids, scatter overcorrection and PSF overshoot, each reconstructed from the same phantom."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Artifacts" />
+    <meta
+      property="og:description"
+      content="Motion, attenuation-map errors, truncation, metal and MR voids, scatter overcorrection and PSF overshoot, each reconstructed from the same phantom."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="artifacts" data-features="theory advanced">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 10 of 10</div>
+          <h1>Artifacts</h1>
+          <p class="lead">
+            When the reconstruction model and the real acquisition disagree, the
+            image shows it. Each experiment below changes one assumption and
+            reconstructs the same phantom slice.
+          </p>
+        </header>
+
+        <section id="chapter10">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 10 / Artifact explorer</div>
+              <h2>When the model and the scan disagree.</h2>
+            </div>
+            <p>
+              Turn one controlled mismatch on or off. Watch its consequence in
+              an actual iterative reconstruction of the same phantom slice.
+            </p>
+          </div>
+          <div class="theorygrid">
+            <div class="theorypanel">
+              <label for="artifactKind">Effect to investigate</label
+              ><select id="artifactKind" class="p4wide">
+                <option value="head">Head motion · two positions</option>
+                <option value="resp">
+                  Periodic motion · respiratory analogue
+                </option>
+                <option value="misreg">
+                  PET–CT/MR attenuation-map misregistration
+                </option>
+                <option value="truncation">Truncated attenuation map</option>
+                <option value="metal">
+                  CT metal-like attenuation overestimate
+                </option>
+                <option value="void">MR dental-like attenuation void</option>
+                <option value="scatter">Scatter overcorrection</option>
+                <option value="psf">
+                  PSF mismatch · edge overshoot
+                </option></select
+              ><label class="sliderlabel" for="artifactSeverity"
+                >Effect strength
+                <output id="artifactSeverityValue">60%</output></label
+              ><input
+                id="artifactSeverity"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value="60"
+              />
+              <div class="p4controls">
+                <label
+                  ><input id="artifactEnabled" type="checkbox" checked /> Effect
+                  on</label
+                ><button id="runArtifact" class="primary">
+                  Recompute effect
+                </button>
+              </div>
+              <p class="eyebrow">Synthetic phantom / controlled mismatch</p>
+              <h3 id="artifactTitle"></h3>
+              <p id="artifactExplanation"></p>
+              <p id="artifactSetting" class="caption"></p>
+              <dl class="theoryreads">
+                <div>
+                  <dt>Difference from reference</dt>
+                  <dd id="artifactDifference">—</dd>
+                </div>
+                <div>
+                  <dt>Peak, effect on / reference</dt>
+                  <dd id="artifactPeak">—</dd>
+                </div>
+              </dl>
+              <p class="caption">
+                Expected data without Poisson sampling isolate the modelling
+                error. Both images use 30 full MLEM iterations, a matched Siddon
+                projector and no post-filter. Difference is relative image L2
+                norm, not a clinical severity score. Display clips at 7 a.u.;
+                the peak readout does not.
+              </p>
+            </div>
+            <div class="theorypanel">
+              <div class="p4pair">
+                <figure>
+                  <canvas
+                    id="artifactReference"
+                    class="p4image"
+                    width="320"
+                    height="320"
+                    role="img"
+                    aria-label="Reference reconstruction without the selected mismatch"
+                  ></canvas>
+                  <figcaption>Reference</figcaption>
+                </figure>
+                <figure>
+                  <canvas
+                    id="artifactChanged"
+                    class="p4image"
+                    width="320"
+                    height="320"
+                    role="img"
+                    aria-label="Reconstruction with the selected artifact enabled or disabled"
+                  ></canvas>
+                  <figcaption id="artifactImageLabel">Effect on</figcaption>
+                </figure>
+              </div>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span>3.5</span
+                  ><span>7 a.u. · both images</span>
+                </div>
+              </div>
+              <label class="sliderlabel" for="artifactRow"
+                >Profile row, posterior → anterior
+                <output id="artifactRowValue">36</output></label
+              ><input
+                id="artifactRow"
+                type="range"
+                min="0"
+                max="63"
+                value="36"
+              /><canvas
+                id="artifactProfile"
+                width="640"
+                height="300"
+                role="img"
+                aria-label="Selected-row activity profile comparing reference and changed reconstruction"
+              ></canvas>
+              <div class="plotkey">
+                <span>Solid / displayed effect</span
+                ><span class="p4dash">Dashed / reference</span
+                ><span class="p4dot">Dotted / assigned truth</span>
+              </div>
+              <p id="artifactStatus" class="caption" role="status">
+                Choose an effect and run the comparison. These are simplified
+                forward-model experiments, not scanner-derived artifacts.
+              </p>
+            </div>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              The source is a brain phantom. Periodic motion and scatter
+              overcorrection are analogues of mechanisms seen in respiratory
+              imaging and near high-activity organs such as the bladder; no
+              chest or bladder is present here. Artificial μ-map bands and voids
+              illustrate attenuation errors without simulating CT beam hardening
+              or MR signal formation.
+              <a
+                href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3663852/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Resolution-modelling pitfalls</a
+              >
+              ·
+              <a
+                href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8590198/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Attenuation and scatter correction context</a
+              >.
+            </p>
+          </details>
+        </section>
+
+        <section class="theorysection" id="motion">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 10 / Motion in practice</div>
+              <h2>Patients breathe during a scan.</h2>
+            </div>
+          </div>
+          <div class="undergrid">
+            <div class="box">
+              <h3>Respiratory gating</h3>
+              <p>
+                Breathing moves lesions in the chest and upper abdomen during a
+                scan that lasts minutes. Gating uses list-mode timing to sort
+                events by breathing phase. Each gate is sharper but holds fewer
+                counts, so it is noisier. Motion-compensated reconstruction can
+                combine the gates again.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Mismatch with CT</h3>
+              <p>
+                A CT is acquired in seconds, often at one breathing phase, while
+                PET averages over many breaths. The attenuation map can
+                therefore disagree with the PET near the diaphragm. The
+                misregistration experiment above shows the mechanism in the
+                brain phantom.
+              </p>
+              <p class="sourceNote">
+                <a
+                  href="https://doi.org/10.1053/j.semnuclmed.2008.01.002"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Nehmeh &amp; Erdi (2008)</a
+                >.
+              </p>
+            </div>
+          </div>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>Motion blurs activity and can misalign the attenuation map.</li>
+            <li>
+              Errors in the
+              <a class="term" data-term="mu-map" href="../reference/#g-mu-map"
+                >μ-map</a
+              >
+              bias activity wherever the map is wrong, including metal,
+              truncation and MR voids.
+            </li>
+            <li>
+              <a class="term" data-term="psf" href="../reference/#g-psf">PSF</a>
+              modelling can sharpen edges, but overcorrection creates overshoot.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../9-image-quality/"
+            ><small>Previous</small>Chapter 9 · Resolution, noise and
+            quantification</a
+          ><a class="next" href="../labs/scanner/"
+            ><small>Next</small>Scanner lab</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

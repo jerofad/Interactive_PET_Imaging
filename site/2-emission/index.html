@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Positron range and non-collinearity · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Why the annihilation is not exactly where the decay happened, and why the two 511 keV photons are not exactly back to back."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Positron range and non-collinearity" />
+    <meta
+      property="og:description"
+      content="Why the annihilation is not exactly where the decay happened, and why the two 511 keV photons are not exactly back to back."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="emission" data-features="theory">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 2 of 10</div>
+          <h1>Positron range and non-collinearity</h1>
+          <p class="lead">
+            The tracer emits a positron, not a photon. The positron travels a
+            short distance and
+            <a
+              class="term"
+              data-term="annihilation"
+              href="../reference/#g-annihilation"
+              >annihilates</a
+            >
+            with an electron. Two 511 keV photons then leave in nearly opposite
+            directions. Both steps blur the image before any detector is
+            involved.
+          </p>
+        </header>
+
+        <section class="theorysection" id="chapter2">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">
+                Chapter 2 / Positron range and non-collinearity
+              </div>
+              <h2>
+                The annihilation is not exactly<br />where the decay happened.
+              </h2>
+            </div>
+          </div>
+          <div class="theorygrid">
+            <div class="theorycopy">
+              <p>
+                The positron travels before annihilation. Its displacement
+                depends on its energy and the material it travels through. Mean
+                travel range and the FWHM of the resulting image blur are
+                different quantities.
+              </p>
+              <p>
+                The two photon directions are also slightly non-collinear. A
+                larger detector ring turns the same angular deviation into a
+                larger position error.
+              </p>
+              <div class="formula">
+                Non-collinearity blur FWHM ≈ 0.0022 D<br />At the centre: blur ≈
+                D · δ / 4<br />δ ≈ 0.0088 rad ≈ 0.50° FWHM
+              </div>
+              <p>
+                Here δ is the deviation of the <em>photon-pair angle</em> from
+                180°. A 0.25° half-angle convention must not be labelled as that
+                full pair-angle FWHM.
+              </p>
+              <div class="theorycontrols">
+                <label
+                  >Shared isotope<select id="rangeIsotope">
+                    <option value="F18">F-18</option>
+                    <option value="C11">C-11</option>
+                    <option value="Ga68">Ga-68</option>
+                    <option value="O15">O-15</option>
+                    <option value="Rb82">Rb-82</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Ring diameter <output id="ringValue">800 mm</output></span
+                  ><input
+                    id="ringDiameter"
+                    type="range"
+                    min="200"
+                    max="1000"
+                    step="20"
+                    value="800"
+                /></label>
+              </div>
+              <p class="sourceNote">
+                Effective range-blur widths and ring dependence:
+                <a
+                  href="https://psec.uchicago.edu/library/applications/PET/Bill_moses_fundamental_limits.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Moses (2011)</a
+                >. Mean water ranges:
+                <a
+                  href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4894854/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Conti & Eriksson (2016)</a
+                >. Ga-68 and Rb-82 means refer to their dominant positron
+                branches.
+              </p>
+            </div>
+            <figure class="theorypanel">
+              <canvas
+                id="rangePlot"
+                width="760"
+                height="360"
+                role="img"
+                aria-label="Illustrative positron-range blur kernel and non-collinearity kernel versus position"
+              ></canvas>
+              <div class="plotkey">
+                <span>Range blur: Laplace proxy</span
+                ><span class="pink">Non-collinearity: Gaussian</span>
+              </div>
+              <div class="theoryreads">
+                <div>
+                  <strong id="rangeMean">—</strong
+                  ><span>Mean range in water</span
+                  ><code>cited value, not FWHM</code>
+                </div>
+                <div>
+                  <strong id="rangeFwhm">—</strong
+                  ><span>Effective range blur</span><code>cited FWHM</code>
+                </div>
+                <div>
+                  <strong id="noncolRead">—</strong
+                  ><span>Non-collinearity blur</span><code>0.0022 · D</code>
+                </div>
+              </div>
+              <figcaption>
+                <span>Unit-area kernels on a fixed ±20 mm axis.</span>
+                <details class="assumptions">
+                  <summary>Figure details</summary>
+                  <p>
+                    The range curve is a Laplace-shaped illustration matched to
+                    a published effective FWHM; it is not a measured
+                    displacement distribution. The curves are shown separately,
+                    not combined into a claimed scanner resolution.
+                  </p>
+                </details>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              <a
+                class="term"
+                data-term="positron-range"
+                href="../reference/#g-positron-range"
+                >Positron range</a
+              >
+              blurs the image, much more for Ga-68 and Rb-82 than for F-18.
+            </li>
+            <li>
+              <a
+                class="term"
+                data-term="non-collinearity"
+                href="../reference/#g-non-collinearity"
+                >Non-collinearity</a
+              >
+              adds blur that grows with ring diameter, about 0.0022 × D.
+            </li>
+            <li>
+              Both are physical limits. Better detectors cannot remove them.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../1-tracers/"
+            ><small>Previous</small>Chapter 1 · Radiotracers and decay</a
+          ><a class="next" href="../3-detection/"
+            ><small>Next</small>Chapter 3 · Photon detection</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

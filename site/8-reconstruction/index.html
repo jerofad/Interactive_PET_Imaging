@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Reconstruction · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="The system matrix, FBP, MLEM and OSEM, the bias–noise trade-off, and a computed reconstruction film you can scrub frame by frame."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Reconstruction" />
+    <meta
+      property="og:description"
+      content="The system matrix, FBP, MLEM and OSEM, the bias–noise trade-off, and a computed reconstruction film you can scrub frame by frame."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="reconstruction" data-features="theory advanced scenes">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 8 of 10</div>
+          <h1>Reconstruction</h1>
+          <p class="lead">
+            Reconstruction turns counts into an image. It searches for the
+            activity that, passed through a model of the scanner (the
+            <a
+              class="term"
+              data-term="system-matrix"
+              href="../reference/#g-system-matrix"
+              >system matrix</a
+            >), best explains the measured sinogram.
+          </p>
+        </header>
+
+        <section id="chapter7">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 8 / Reconstruction in depth</div>
+              <h2>A model, an estimate, a correction.</h2>
+            </div>
+            <p>
+              Every update asks whether a proposed activity image could have
+              produced the measured coincidences.
+            </p>
+          </div>
+          <div class="theorygrid">
+            <div class="theorycopy">
+              <h3>The system matrix is the bridge</h3>
+              <p>
+                For projection bin i and voxel j, A<sub>ij</sub> is the expected
+                contribution per unit activity. Here Siddon’s ray intersections
+                give the path length in each square voxel. Exposure, detector
+                efficiency and the attenuation survival factor multiply each
+                row. Scatter and randoms enter as additive expected counts b.
+              </p>
+              <div class="formula">
+                yᵢ ~ Poisson((Ax)ᵢ + bᵢ)<br />xⱼ ← xⱼ / (Aᵀ1)ⱼ · [Aᵀ(y / (Ax +
+                b))]ⱼ
+              </div>
+              <p>
+                The transpose Aᵀ uses exactly the same path lengths as the
+                forward projector. Sensitivity Aᵀ1 accounts for unequal
+                sampling. In this notebook the matrix is stored sparsely; a ray
+                only touches a small fraction of the image.
+              </p>
+              <details>
+                <summary>FBP, MLEM and OSEM</summary>
+                <p>
+                  <strong>FBP</strong> corrects the projections, applies a ramp
+                  filter and backprojects. It is fast and linear; its ramp
+                  amplifies high spatial frequencies and noise, and negative
+                  estimates are possible.
+                </p>
+                <p>
+                  <strong>MLEM</strong> uses all projections per update,
+                  preserves non-negativity and increases the Poisson likelihood
+                  for this matched model. More iterations recover detail but can
+                  amplify noise.
+                </p>
+                <p>
+                  <strong>OSEM</strong> updates with interleaved angular subsets
+                  and their own sensitivity images. One pass through all subsets
+                  is one iteration. Faster initial progress does not guarantee
+                  full-data likelihood increases at every update; fixed subsets
+                  can approach a limit cycle.
+                </p>
+                <a href="../labs/reconstruction/#reconstruction"
+                  >Compare all three in the reconstruction lab →</a
+                >
+              </details>
+            </div>
+            <div class="theorypanel">
+              <h3>Watch bias and noise evolve</h3>
+              <span class="badge">SYNTHETIC PHANTOM</span>
+              <p class="caption">
+                Eight independent seeded Poisson acquisitions · 32 × 32 pixels ·
+                30 MLEM iterations · identical known corrections.
+              </p>
+              <div class="p4controls">
+                <label
+                  >Expected prompts
+                  <select id="biasCounts">
+                    <option value="10000">10,000</option>
+                    <option value="100000" selected>100,000</option>
+                    <option value="1000000">1,000,000</option>
+                  </select></label
+                ><label
+                  >Post-filter
+                  <select id="biasFilter">
+                    <option value="0">None</option>
+                    <option value="8">8 mm FWHM</option>
+                    <option value="12">12 mm FWHM</option>
+                  </select></label
+                ><button id="runBias" class="primary">Run ensemble</button>
+              </div>
+              <canvas
+                id="biasPlot"
+                width="640"
+                height="340"
+                role="img"
+                aria-label="Measured ensemble bias, spread and total error versus MLEM iteration"
+              ></canvas>
+              <div class="plotkey">
+                <span>Solid / total RMS error</span
+                ><span class="p4dash">Dashed / bias</span
+                ><span class="p4dot">Dotted / spread</span>
+              </div>
+              <label class="sliderlabel" for="biasIteration"
+                >Inspect iteration
+                <output id="biasIterationValue">10</output></label
+              ><input
+                id="biasIteration"
+                type="range"
+                min="1"
+                max="30"
+                value="10"
+              />
+              <div class="p4pair">
+                <figure>
+                  <canvas
+                    id="biasSingle"
+                    class="p4image"
+                    width="256"
+                    height="256"
+                    role="img"
+                    aria-label="One noisy reconstruction at the selected iteration"
+                  ></canvas>
+                  <figcaption>One realisation</figcaption>
+                </figure>
+                <figure>
+                  <canvas
+                    id="biasMean"
+                    class="p4image"
+                    width="256"
+                    height="256"
+                    role="img"
+                    aria-label="Mean of eight reconstructions at the selected iteration"
+                  ></canvas>
+                  <figcaption>Ensemble mean</figcaption>
+                </figure>
+              </div>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span>3.5</span
+                  ><span>7 a.u. · both images</span>
+                </div>
+              </div>
+              <p id="biasStatus" class="caption" role="status">
+                Run the ensemble to measure the curves. Both images will use the
+                same 0–7 a.u. scale.
+              </p>
+            </div>
+          </div>
+          <div class="undergrid">
+            <div class="box">
+              <h3>Early stopping and regularisation</h3>
+              <p>
+                Early stopping and smoothing trade detail for lower noise. The
+                graph estimates bias from the ensemble mean and spread about
+                that mean; RMS error² = bias² + spread², all normalised by the
+                truth’s squared norm. Eight samples give a noisy finite-ensemble
+                estimate, not a universal optimum or an uncertainty interval.
+              </p>
+              <div class="formula">
+                x̂ = arg max<sub>x ≥ 0</sub> { log p(y | x) − β R(x) }
+              </div>
+              <p>
+                A penalty R can favour smoothness or preserve edges. Increasing
+                β usually suppresses noise and can suppress true small
+                structures too. Penalised likelihood is explained here; the lab
+                itself implements unpenalised EM with an optional post-filter.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Resolution models and learned updates</h3>
+              <p>
+                A point-spread model can be placed inside A. Correct modelling
+                may improve recovery; sharp boundaries, imperfect kernels and
+                excessive iteration can produce edge overshoot. Inspect the PSF
+                mismatch experiment in
+                <a href="../10-artifacts/#chapter10">chapter 10</a>.
+              </p>
+              <p>
+                <a
+                  href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7610859/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >FBSEM</a
+                >
+                couples forward–backward splitting and EM with learned
+                regularisation.
+                <a
+                  href="https://arxiv.org/abs/2205.04204"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >TransEM</a
+                >
+                embeds a residual Swin-transformer regulariser in iterative PET
+                reconstruction. These research methods combine a measurement
+                model with learned image information; results depend on training
+                data, count level and evaluation task. Neither network is run by
+                this notebook.
+              </p>
+            </div>
+          </div>
+        </section>
+        <section id="reconstruction-film" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 8 / Reconstruction film</div>
+              <h2>See the estimate change.</h2>
+            </div>
+            <p>
+              Three acts use computed projection data and actual reconstruction
+              updates. Pause anywhere to inspect the image and its residual.
+            </p>
+          </div>
+          <div
+            class="recordbar"
+            aria-label="Reconstruction film recording controls"
+          >
+            <label class="recordOption"
+              >Frame
+              <select id="filmAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="filmClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="filmFullscreen">Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="filmRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="filmGL"
+                class="sceneGL"
+                aria-label="Three-dimensional reconstruction workbench with image, ratio sinogram and backprojected correction"
+                role="img"
+              ></canvas
+              ><canvas
+                id="filmHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="filmFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="filmBuild" class="primary">Compute film</button
+              ><button id="filmPlay" disabled aria-pressed="false">
+                Play film</button
+              ><label
+                >Act
+                <select id="filmAct">
+                  <option value="1">1 · Backprojection and ramp filter</option>
+                  <option value="2">2 · Iterative reconstruction</option>
+                  <option value="3">3 · Corrections, one at a time</option>
+                </select></label
+              ><label
+                ><input id="filmLoop" type="checkbox" checked /> Loop all
+                acts</label
+              >
+            </div>
+            <label class="sliderlabel" for="filmFrame"
+              >Computed checkpoint <output id="filmFrameValue">—</output></label
+            ><input
+              id="filmFrame"
+              type="range"
+              min="0"
+              max="1"
+              step="1"
+              value="0"
+              disabled
+            />
+            <p class="caption">
+              Uses the default scanner settings with a fixed 100,000 expected
+              prompts and seed 173. In the
+              <a href="../labs/scanner/">scanner lab</a>, the film follows your
+              settings. Act 2 uses MLEM or OSEM; if FBP is selected, it
+              demonstrates MLEM. Act 3 always uses 30 full MLEM iterations per
+              correction stage. Settings changes invalidate the film.
+            </p>
+          </div>
+          <div id="filmEquation" class="formula">ȳ = A x + s + r</div>
+          <p id="filmStatus" class="caption" role="status">
+            Compute the film to create the frames. Other experiments remain
+            available while it runs.
+          </p>
+          <div class="sceneDiagnostics">
+            <figure class="scenePanel">
+              <h3>Image at this checkpoint</h3>
+              <canvas
+                id="filmImage"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Image at this checkpoint, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="filmImageMax">7 a.u.</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3 id="filmRatioLabel">Measured / predicted</h3>
+              <canvas
+                id="filmRatio"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Measured / predicted, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="filmRatioMax">2 unitless</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3 id="filmBackLabel">Backprojected ratio</h3>
+              <canvas
+                id="filmBack"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Backprojected ratio, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="filmBackMax">2 unitless</span>
+                </div>
+              </div>
+            </figure>
+          </div>
+          <div class="undergrid">
+            <div class="theorypanel">
+              <h3>Full-data Poisson log-likelihood</h3>
+              <canvas
+                id="filmLikelihood"
+                width="640"
+                height="300"
+                role="img"
+                aria-label="Actual log-likelihood change versus subset updates"
+              ></canvas>
+              <p class="caption">
+                Shown relative to the initial estimate, per prompt. OSEM updates
+                need not increase the full-data likelihood monotonically.
+              </p>
+            </div>
+            <div class="theorypanel">
+              <h3>What changes inside a region?</h3>
+              <canvas
+                id="filmROI"
+                width="640"
+                height="300"
+                role="img"
+                aria-label="Lesion-region maximum and white-matter mean versus correction stage or update"
+              ></canvas>
+              <div class="plotkey">
+                <span>12 mm lesion region / maximum</span
+                ><span class="teal">Assigned WM voxels / mean</span>
+              </div>
+              <p class="caption">
+                Activity in a.u.; no SUV calibration. Lesion ROI: centres within
+                8 mm of the inserted 12 mm sphere’s centre. WM ROI: slice voxels
+                assigned exactly 1 a.u. Post-filter applies in Act 2; Act 3 uses
+                no post-filter.
+              </p>
+            </div>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              Plain backprojection spreads each line over the image, producing
+              the familiar 1/r blur in the ideal continuous 2D case. Its frames
+              are peak-normalised for display. FBP and iterative frames retain
+              activity scaling. Act 2’s backprojected ratio uses all angles to
+              diagnose the next full-data correction, even when OSEM updates use
+              subsets. Decay correction refers the estimate to the phantom’s
+              assigned reference activity; it does not restore lost counts.
+            </p>
+          </details>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              <a class="term" data-term="fbp" href="../reference/#g-fbp">FBP</a>
+              is fast and linear but amplifies noise.
+              <a class="term" data-term="mlem" href="../reference/#g-mlem"
+                >MLEM</a
+              >
+              and
+              <a class="term" data-term="osem" href="../reference/#g-osem"
+                >OSEM</a
+              >
+              model Poisson counts and stay non-negative.
+            </li>
+            <li>
+              More iterations lower bias and raise noise. The stopping point and
+              the post-filter are choices, not defaults to trust.
+            </li>
+            <li>
+              Every correction lives in the model. A wrong model produces a
+              confident, wrong image.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../7-corrections/"
+            ><small>Previous</small>Chapter 7 · Corrections</a
+          ><a class="next" href="../9-image-quality/"
+            ><small>Next</small>Chapter 9 · Resolution, noise and
+            quantification</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

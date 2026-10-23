@@ -1,0 +1,28 @@
+{
+  "name": "from-decay-to-voxel",
+  "private": true,
+  "version": "1.0.0",
+  "description": "An interactive, multi-page guide to the positron emission tomography (PET) pipeline.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "node tests/e2e/smoke.mjs",
+    "format": "prettier --write \"site/**/*.{html,css,js}\" \"tests/**/*.{js,mjs}\" vite.config.js"
+  },
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.48.2",
+    "prettier": "^3.3.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Time of flight · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="How the arrival-time difference of the two photons localises each event along its line, and what that does to image noise."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Time of flight" />
+    <meta
+      property="og:description"
+      content="How the arrival-time difference of the two photons localises each event along its line, and what that does to image noise."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="tof" data-features="theory">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 6 of 10</div>
+          <h1>Time of flight</h1>
+          <p class="lead">
+            If the scanner measures which photon arrived first, and by how much,
+            it can place each event on a segment of its line rather than
+            anywhere along it. This is
+            <a class="term" data-term="tof" href="../reference/#g-tof"
+              >time of flight</a
+            >.
+          </p>
+        </header>
+
+        <section class="theorysection" id="chapter6">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 6 / Time of flight</div>
+              <h2>
+                A timing difference narrows<br />where an event could have
+                happened.
+              </h2>
+            </div>
+          </div>
+          <div class="theorygrid">
+            <div class="theorycopy">
+              <p>
+                A timing offset places the centre of the event’s localisation
+                kernel along the LOR. Timing <em>resolution</em> sets the width
+                of that kernel. These are separate quantities.
+              </p>
+              <div class="formula">
+                x = c · (tleft − tright) / 2<br />Localisation FWHM Δx = c · CTR
+                / 2<br />c = 0.299792458 mm/ps
+              </div>
+              <p>
+                With this sign convention, a positive delay places the event to
+                the right. A 200 ps coincidence timing resolution gives a
+                localisation FWHM of about 30 mm. It does not make the
+                reconstructed image resolution 30 mm; many LORs constrain the
+                image together.
+              </p>
+              <p>
+                For a roughly uniform object, a first estimate of effective
+                sensitivity gain is D/Δx, with an SNR gain of its square root. D
+                is the <em>object diameter</em>, not the scanner-ring diameter.
+                This estimate is useful when Δx is smaller than the object.
+              </p>
+              <div class="formula">
+                Effective gain ≈ max(1, D/Δx)<br />SNR gain ≈ √(effective gain)
+              </div>
+              <p class="sourceNote">
+                TOF localisation and approximate gain:
+                <a
+                  href="https://jnm.snmjournals.org/content/56/1/98"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Surti (2015)</a
+                >. Exact reconstruction gains depend on the object, count level,
+                timing model and algorithm; they are not guaranteed by this
+                ratio.
+              </p>
+            </div>
+            <figure class="theorypanel">
+              <div class="theorycontrols">
+                <label
+                  >Coincidence timing resolution<select id="tofResolution">
+                    <option value="0">TOF off</option>
+                    <option value="600">600 ps FWHM</option>
+                    <option value="400">400 ps FWHM</option>
+                    <option value="200" selected>200 ps FWHM</option>
+                    <option value="100">100 ps FWHM</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Object diameter
+                    <output id="objectValue">200 mm</output></span
+                  ><input
+                    id="objectDiameter"
+                    type="range"
+                    min="100"
+                    max="400"
+                    step="10"
+                    value="200" /></label
+                ><label
+                  ><span
+                    >Arrival-time difference
+                    <output id="dtValue">0 ps</output></span
+                  ><input
+                    id="timeDifference"
+                    type="range"
+                    min="-300"
+                    max="300"
+                    step="10"
+                    value="0"
+                /></label>
+              </div>
+              <canvas
+                id="tofPlot"
+                width="760"
+                height="360"
+                role="img"
+                aria-label="Gaussian time-of-flight localisation kernel on a line of response compared with a uniform non-TOF object support"
+              ></canvas>
+              <div class="plotkey">
+                <span class="pink">TOF likelihood kernel</span
+                ><span class="grey">Uniform object-support reference</span>
+              </div>
+              <div class="theoryreads">
+                <div>
+                  <strong id="tofWidth">—</strong><span>Localisation FWHM</span
+                  ><code>c · CTR / 2</code>
+                </div>
+                <div>
+                  <strong id="tofGain">—</strong
+                  ><span>Approximate effective gain</span
+                  ><code>max(1, D/Δx)</code>
+                </div>
+                <div>
+                  <strong id="tofPosition">—</strong><span>Kernel centre</span
+                  ><code>c · (tleft − tright) / 2</code>
+                </div>
+              </div>
+              <figcaption>
+                <span
+                  >Gaussian measurement likelihood along an LOR, not a posterior
+                  or a reconstructed image PSF.</span
+                >
+                <details class="assumptions">
+                  <summary>Figure details</summary>
+                  <p>
+                    The non-TOF line is a uniform-support reference. Kernel
+                    tails extend beyond the visible object.
+                  </p>
+                </details>
+              </figcaption>
+            </figure>
+          </div>
+          <figure class="theorypanel">
+            <h3>Convergence, measured in a small reconstruction experiment</h3>
+            <p class="theoryhint">
+              This companion experiment uses the same brain slice reduced to 32
+              × 32, 40 angles and 65 radial bins. It runs noiseless MLEM both
+              with and without a Gaussian TOF model. The result is computed
+              here, not drawn from a preset convergence curve.
+            </p>
+            <canvas
+              id="tofConvergence"
+              width="1000"
+              height="330"
+              role="img"
+              aria-label="Computed NRMSE versus twenty MLEM iterations for non-TOF and TOF reconstruction"
+            ></canvas>
+            <div class="plotkey">
+              <span class="grey">Non-TOF</span
+              ><span class="pink">Selected TOF resolution</span>
+            </div>
+            <p id="tofStatus" class="caption" role="status">
+              Preparing the TOF comparison…
+            </p>
+            <figcaption>
+              <span
+                >Relative error ‖x − xtrue‖₂/‖xtrue‖₂, at iterations 0–20.</span
+              >
+              <details class="assumptions">
+                <summary>Figure details</summary>
+                <p>
+                  The TOF system partitions each Siddon ray into 21 timing bins
+                  at 20 mm spacing, with tail bins collecting overflow. Bin
+                  probabilities use voxel-centre positions and conserve expected
+                  counts. Both models start from the same uniform activity. No
+                  attenuation, scatter, randoms, detector blur or count noise;
+                  this experiment changes with CTR only, not the separate
+                  diameter or timing-offset controls.
+                </p>
+              </details>
+            </figcaption>
+          </figure>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              Localisation FWHM is c × CTR ÷ 2. A 200 ps CTR gives about 30 mm.
+            </li>
+            <li>
+              TOF mainly reduces noise by raising effective sensitivity. It is
+              not a direct gain in spatial resolution.
+            </li>
+            <li>
+              The benefit grows with object size, so larger patients gain more.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../5-data/"
+            ><small>Previous</small>Chapter 5 · From coincidences to data</a
+          ><a class="next" href="../7-corrections/"
+            ><small>Next</small>Chapter 7 · Corrections</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

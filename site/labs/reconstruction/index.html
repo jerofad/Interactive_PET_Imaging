@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Reconstruction lab · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Reconstruct one simulated PET acquisition with FBP, MLEM or OSEM, change the count level, and switch corrections on and off."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Reconstruction lab" />
+    <meta
+      property="og:description"
+      content="Reconstruct one simulated PET acquisition with FBP, MLEM or OSEM, change the count level, and switch corrections on and off."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="lab-recon" data-features="lab">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../scanner/">Scanner lab</a></li>
+          <li><a href="./" aria-current="page">Reconstruction lab</a></li>
+          <li><a href="../viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Lab</div>
+          <h1>Reconstruction lab</h1>
+          <p class="lead">
+            Choose the count level, the algorithm and which corrections enter
+            the model, then watch the reconstruction update. Every run uses the
+            same matched 2D projector.
+          </p>
+        </header>
+        <div class="key" aria-label="Consistent figure colour key">
+          <span><i></i>Activity</span
+          ><span><i class="phot"></i>Photons / LORs</span
+          ><span><i class="det"></i>Detectors</span
+          ><span><i class="scat"></i>Scatter — dashed</span
+          ><span><i class="rand"></i>Randoms · dotted</span
+          ><span><i class="anat"></i>Anatomy</span>
+        </div>
+        <div class="hero" id="counts">
+          <figure class="scanhero">
+            <div class="scanhead">
+              <span id="heroInputLabel">AXIAL / z = +7 mm</span
+              ><strong>SYNTHETIC PHANTOM</strong>
+            </div>
+            <div class="heroimage">
+              <canvas
+                id="heroCanvas"
+                width="512"
+                height="512"
+                role="img"
+                aria-label="Reconstruction from the simulated measured sinogram"
+              ></canvas
+              ><span class="orient n">A</span><span class="orient s">P</span
+              ><span class="orient w">R</span><span class="orient e">L</span>
+            </div>
+            <div class="colorbar">
+              <div class="ramp"></div>
+              <div class="ticks">
+                <span>0</span><span>3.5</span><span>≥ 7 a.u.</span>
+              </div>
+            </div>
+            <figcaption id="heroFigureCaption">
+              Reconstruction from simulated projection counts.
+            </figcaption>
+            <div class="heroStatus" id="heroStatus">
+              Preparing the reconstruction…
+            </div>
+          </figure>
+          <div class="controls">
+            <div class="eyebrow">Experiment / Counts become detail</div>
+            <h2>Every count carries information.</h2>
+            <p>
+              Move through five orders of magnitude. More counts make the
+              activity pattern easier to distinguish from noise.
+            </p>
+            <div class="count" id="countReadout">100,000</div>
+            <div class="countlabel">
+              expected prompt counts in this 2D acquisition
+            </div>
+            <label class="sliderlabel" for="countSlider"
+              ><span>Count budget <span class="mono">N</span></span
+              ><output id="powerReadout">10⁵</output></label
+            ><input
+              id="countSlider"
+              type="range"
+              min="3"
+              max="8"
+              value="5"
+              step="0.025"
+            />
+            <div class="rangeends">
+              <span>10³ / sparse</span><span>10⁸ / dense</span>
+            </div>
+            <div class="buttonrow">
+              <button class="primary" id="play">Play count sweep</button
+              ><button id="reset">Reset</button
+              ><button id="reference" aria-pressed="false">
+                Show noiseless
+              </button>
+            </div>
+            <div class="stats">
+              <div class="stat">
+                <strong id="noiseReadout">3.16×</strong
+                ><span>relative counting noise</span
+                ><span class="mono">√(10⁶ / N)</span>
+              </div>
+              <div class="stat">
+                <strong id="realised">—</strong
+                ><span>measured prompt counts</span
+                ><span class="mono">Σᵢ yᵢ</span>
+              </div>
+            </div>
+            <div class="notice">
+              2D simulation: Poisson counts are sampled in sinogram space, then
+              reconstructed with the algorithm selected below. Each sweep step
+              is a separate seeded acquisition.
+            </div>
+          </div>
+        </div>
+        <section id="reconstruction">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Lab / Reconstruction</div>
+              <h2>Measure. Predict. Update.</h2>
+            </div>
+            <p>
+              Reconstruct the same measurements with different algorithms.
+              Switch a correction off to see what happens when the model leaves
+              out part of the acquisition.
+            </p>
+          </div>
+          <p id="presetNote" class="notice presetnote" role="status" hidden></p>
+          <div class="labcontrols">
+            <label
+              >Input slice<select id="caseSelect">
+                <option value="brain">Brain phantom · z = +7 mm</option>
+                <option value="cylinder">Uniform water cylinder</option>
+                <option value="point">Off-centre point voxel</option>
+              </select></label
+            ><label
+              >Reconstruction<select id="algorithm">
+                <option value="OSEM">OSEM</option>
+                <option value="MLEM">MLEM</option>
+                <option value="FBP">FBP · Ram-Lak</option>
+              </select></label
+            ><label
+              >Iterations <output id="iterValue">3</output
+              ><input
+                id="iterations"
+                type="range"
+                min="1"
+                max="30"
+                step="1"
+                value="3" /></label
+            ><label
+              >Subsets<select id="subsets">
+                <option>1</option>
+                <option>4</option>
+                <option>8</option>
+                <option>12</option>
+                <option selected>20</option>
+              </select></label
+            ><label
+              >Post-filter FWHM <output id="filterValue">0 mm</output
+              ><input
+                id="filter"
+                type="range"
+                min="0"
+                max="10"
+                step="1"
+                value="0" /></label
+            ><label class="noiseoption"
+              ><input id="measurementNoise" type="checkbox" checked /> Poisson
+              noise</label
+            >
+          </div>
+          <fieldset class="corrections">
+            <legend>Corrections included in reconstruction</legend>
+            <label
+              ><input type="checkbox" id="corrNorm" checked />
+              Normalisation</label
+            ><label
+              ><input type="checkbox" id="corrAtten" checked />
+              Attenuation</label
+            ><label
+              ><input type="checkbox" id="corrScatter" checked /> Scatter</label
+            ><label
+              ><input type="checkbox" id="corrRandom" checked /> Randoms</label
+            ><button id="allCorrections">Enable all</button
+            ><button id="noCorrections">Disable all</button>
+          </fieldset>
+          <div class="labactions">
+            <div>
+              <button class="primary" id="runRecon">Reconstruct</button>
+              <button id="newSample">New noise sample</button>
+              <button id="cancelRecon" disabled>Stop</button>
+            </div>
+            <p id="engineStatus" role="status" aria-live="polite">
+              Loading the reconstruction engine…
+            </p>
+          </div>
+          <div class="labprogress" aria-hidden="true">
+            <div id="engineProgress"></div>
+          </div>
+          <div class="labfigures">
+            <figure>
+              <div class="labfigurehead">
+                <strong>Assigned activity</strong
+                ><span class="badge">PHANTOM</span>
+              </div>
+              <canvas
+                id="truthCanvas"
+                width="384"
+                height="384"
+                role="img"
+                aria-label="Ground truth of the selected synthetic slice"
+              ></canvas>
+              <div class="colorbar">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span>3.5</span><span>7 a.u.</span>
+                </div>
+              </div>
+              <figcaption id="truthCaption">
+                64 × 64 · 4 mm pixels · block-averaged brain activity.
+              </figcaption>
+            </figure>
+            <figure>
+              <div class="labfigurehead">
+                <strong id="reconTitle">OSEM reconstruction</strong
+                ><span class="badge" id="updateBadge">0 updates</span>
+              </div>
+              <canvas
+                id="reconCanvas"
+                width="384"
+                height="384"
+                role="img"
+                aria-label="Reconstruction of the selected measured sinogram"
+              ></canvas>
+              <div class="colorbar">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>≤ 0</span><span>3.5</span><span>≥ 7 a.u.</span>
+                </div>
+              </div>
+              <figcaption id="reconCaption">
+                Starting from uniform activity inside the circular field.
+              </figcaption>
+            </figure>
+            <figure>
+              <div class="labfigurehead">
+                <label for="sinoMode">Sinogram</label
+                ><select id="sinoMode">
+                  <option value="measured">Measured counts y</option>
+                  <option value="expected">Expected counts ȳ</option>
+                  <option value="ratio">Ratio y / prediction</option>
+                </select>
+              </div>
+              <canvas
+                id="sinoCanvas"
+                width="384"
+                height="384"
+                role="img"
+                aria-label="Sinogram with radial offset on the horizontal axis and projection angle vertically"
+              ></canvas>
+              <div class="colorbar">
+                <div class="ramp" id="sinoRamp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="sinoMid">—</span
+                  ><span id="sinoMax">— counts/bin</span>
+                </div>
+              </div>
+              <figcaption id="sinoCaption">
+                s: −128 to +128 mm · φ: 0 to 178.5°.<br />120 angles × 129
+                radial bins · linear colour scale.
+              </figcaption>
+            </figure>
+          </div>
+          <div class="labmetrics">
+            <div>
+              <strong id="metricError">—</strong
+              ><span>NRMSE to assigned activity</span
+              ><code>‖x − xtrue‖₂ / ‖xtrue‖₂</code>
+            </div>
+            <div>
+              <strong id="metricDeviance">—</strong
+              ><span>Poisson deviance / bin</span
+              ><code>2Σ[ȳ − y + y ln(y/ȳ)] / bins</code>
+            </div>
+            <div>
+              <strong id="metricTime">—</strong
+              ><span>Measured computation time</span
+              ><code>worker elapsed time · ms</code>
+            </div>
+            <div>
+              <strong id="metricSample">—</strong
+              ><span>Realised prompt counts</span
+              ><code>Σ yᵢ · seed <b id="seedLabel">17</b></code>
+            </div>
+          </div>
+          <div class="undergrid">
+            <figure class="box">
+              <h3>Does the model explain the measurements?</h3>
+              <canvas
+                id="likelihoodPlot"
+                class="hist"
+                width="640"
+                height="240"
+                role="img"
+                aria-label="Full-data log-likelihood improvement per prompt count versus reconstruction updates"
+              ></canvas>
+              <figcaption class="caption" id="likelihoodCaption">
+                Full-data log-likelihood improvement / prompt count, before
+                post-filtering. Recorded after each complete iteration. FBP has
+                no iterative likelihood trajectory.
+              </figcaption>
+            </figure>
+            <div class="box">
+              <h3>The model used here</h3>
+              <div class="formula">
+                ȳ = A x + s + r<br />A = κ · diag(n · a) · P<br />aᵢ = exp(−Σⱼ
+                μⱼ ℓᵢⱼ)<br />Pᵢⱼ = ℓᵢⱼ in cm
+              </div>
+              <p class="labnote">
+                P uses Siddon intersections. κ sets the expected prompt-count
+                budget; n is a prescribed efficiency pattern. Corrections alter
+                A, s and r during reconstruction. The generated measurements
+                stay fixed.
+              </p>
+              <p class="labnote">
+                MLEM uses all angles for one update. OSEM partitions angles into
+                interleaved subsets and uses a separate sensitivity for each.
+                More subsets can accelerate early progress; they do not
+                guarantee an equal wall-clock speed-up or monotonic full-data
+                likelihood.
+              </p>
+            </div>
+          </div>
+          <details class="engineDetails">
+            <summary>Numerical model, assumptions and verification</summary>
+            <div class="methodgrid">
+              <div>
+                <h3>What is measured</h3>
+                <p>
+                  The brain slice is averaged in 2 × 2 blocks from 128 × 128 to
+                  64 × 64. The simulation uses 120 equally spaced angles over
+                  [0, π), with 129 bins at 2 mm spacing. Distances in the
+                  projector are in centimetres. This is a 2D parallel-beam
+                  simulation with no TOF, detector blur, positron range or PSF
+                  model.
+                </p>
+                <p>
+                  All labelled head tissues use a water-equivalent μ = 0.096
+                  cm⁻¹ at 511 keV. This includes the skull in this phase; it is
+                  not a calibrated bone μ-map. The cylinder has radius 80 mm.
+                  The point is one 4 × 4 mm voxel at (R, A) = (34, 22) mm, not
+                  an infinitesimal source.
+                </p>
+                <p>
+                  Prescribed expected prompt fractions are T = 65%, S = 25%, R =
+                  10%. Thus S/(T+S) = 27.78%. These are teaching inputs, not a
+                  scanner performance prediction. Scatter uses a broad Gaussian
+                  radial profile (σ = 64 mm) with 10% angular modulation;
+                  randoms are uniform. Both corrections use the exact simulated
+                  expectations and have no estimation uncertainty.
+                </p>
+                <p>
+                  The efficiency is n = 1 + 0.15 cos(2φ) + 0.05 sin(2πb/129),
+                  with b the zero-based radial bin. κ = 0.65 N / Σ[n a P xtrue].
+                  There is no decay or dead-time model yet.
+                </p>
+              </div>
+              <div>
+                <h3>What is reconstructed</h3>
+                <div class="formula">
+                  x⁽ᵏ⁺¹⁾ = x⁽ᵏ⁾ / (Aᵀ1)<br />　　　　· Aᵀ[y / (A x⁽ᵏ⁾ + s + r)]
+                </div>
+                <p>
+                  MLEM and OSEM start uniformly in a circular support. Poisson
+                  measurements use a seeded product sampler below λ = 10 and
+                  transformed rejection above it. Turning noise off supplies the
+                  expected sinogram, which can contain fractional counts.
+                </p>
+                <p>
+                  FBP subtracts the enabled additive terms and divides by the
+                  enabled multiplicative terms, then applies a spatial Ram-Lak
+                  filter and interpolated backprojection. Signed values are
+                  retained in calculations. The image display clips below 0 and
+                  above 7 a.u.; the caption reports negative pixels.
+                </p>
+                <p>
+                  Post-filtering uses a Gaussian with σ = FWHM / √(8 ln 2),
+                  truncated at 3σ with zero boundary padding. It changes the
+                  displayed reconstruction and NRMSE; likelihood and deviance
+                  are measured before filtering.
+                </p>
+                <p>
+                  Count sweeps run separate seeded acquisitions, not a
+                  cumulative event list. Turning corrections off preserves the
+                  same measured sinogram and exposure. All work runs in an
+                  embedded worker; the page remains self-contained.
+                </p>
+              </div>
+            </div>
+            <div class="verification">
+              <h3>Engine verification</h3>
+              <p id="verificationSummary">
+                Passed 15 checks covering ray lengths, projector adjoint
+                consistency, point-source localisation, cylinder scale,
+                attenuation, correction terms, Poisson sampling and worker
+                cancellation. Noiseless cylinder mean within 30 mm of the
+                centre: MLEM (30 iterations) 0.998, OSEM (3 iterations × 20
+                subsets) 0.9995, FBP 0.9996 a.u. (assigned: 1). Without
+                attenuation correction, MLEM gives about 0.12 a.u. in the same
+                region. Point sinogram centroid error ≤ 1.00 mm;
+                matched-projector adjoint relative error 3.9e-15.
+              </p>
+              <p class="caption">
+                These figures are reproduced by the project’s automated test
+                suite.
+              </p>
+            </div>
+          </details>
+        </section>
+
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../scanner/"
+            ><small>Previous</small>Scanner lab</a
+          ><a class="next" href="../viewer/"
+            ><small>Next</small>Phantom viewer</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

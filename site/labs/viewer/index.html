@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Phantom viewer · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Explore the synthetic FDG-like brain phantom in linked axial, coronal and sagittal slices and a rotating maximum-intensity projection."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Phantom viewer" />
+    <meta
+      property="og:description"
+      content="Explore the synthetic FDG-like brain phantom in linked axial, coronal and sagittal slices and a rotating maximum-intensity projection."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="lab-viewer" data-features="viewer advanced">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../scanner/">Scanner lab</a></li>
+          <li><a href="../reconstruction/">Reconstruction lab</a></li>
+          <li><a href="./" aria-current="page">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Lab</div>
+          <h1>Phantom viewer</h1>
+          <p class="lead">
+            The synthetic brain phantom behind every experiment. Click any slice
+            to move the crosshair, or rotate the volume as a maximum-intensity
+            projection.
+          </p>
+        </header>
+
+        <section id="scans">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Lab / Phantom viewer</div>
+              <h2>One volume. Three perspectives.</h2>
+            </div>
+            <p>
+              Explore the same phantom in linked orthogonal planes. Click an
+              image to move the crosshair, or use its slice slider.
+            </p>
+          </div>
+          <div class="viewerbar">
+            <div>
+              <strong>FDG-like brain phantom</strong>
+              <span class="badge">SYNTHETIC</span>
+            </div>
+            <div class="formrow">
+              <label
+                >Map
+                <select id="palette">
+                  <option value="inferno">Inferno</option>
+                  <option value="gray">Greyscale</option>
+                </select></label
+              ><label
+                ><input id="crosshair" type="checkbox" checked />
+                Crosshair</label
+              ><button id="centre">Centre volume</button>
+            </div>
+          </div>
+          <div class="views">
+            <div class="view">
+              <div class="viewheader">
+                <strong>Axial</strong><output id="zValue"></output>
+              </div>
+              <div class="canvasbox">
+                <canvas
+                  id="axial"
+                  width="384"
+                  height="384"
+                  role="img"
+                  aria-label="Axial activity view of synthetic phantom"
+                ></canvas>
+              </div>
+              <label class="sliderlabel" for="zSlider"
+                >Inferior–superior slice</label
+              ><input id="zSlider" type="range" min="0" max="95" value="51" />
+              <div class="caption">R ← image → L · A at top</div>
+            </div>
+            <div class="view">
+              <div class="viewheader">
+                <strong>Coronal</strong><output id="yValue"></output>
+              </div>
+              <div class="canvasbox">
+                <canvas
+                  id="coronal"
+                  width="384"
+                  height="384"
+                  role="img"
+                  aria-label="Coronal activity view of synthetic phantom"
+                ></canvas>
+              </div>
+              <label class="sliderlabel" for="ySlider"
+                >Posterior–anterior slice</label
+              ><input id="ySlider" type="range" min="0" max="127" value="72" />
+              <div class="caption">R ← image → L · S at top</div>
+            </div>
+            <div class="view">
+              <div class="viewheader">
+                <strong>Sagittal</strong><output id="xValue"></output>
+              </div>
+              <div class="canvasbox">
+                <canvas
+                  id="sagittal"
+                  width="384"
+                  height="384"
+                  role="img"
+                  aria-label="Sagittal activity view of synthetic phantom"
+                ></canvas>
+              </div>
+              <label class="sliderlabel" for="xSlider">Left–right slice</label
+              ><input id="xSlider" type="range" min="0" max="127" value="80" />
+              <div class="caption">P ← image → A · S at top</div>
+            </div>
+          </div>
+          <div class="viewerscale">
+            <p id="voxelReadout">Loading embedded volume…</p>
+            <div class="colorbar">
+              <div class="ramp" id="viewerRamp"></div>
+              <div class="ticks">
+                <span>0</span><span>3.5</span><span>7 a.u.</span>
+              </div>
+            </div>
+          </div>
+          <div class="undergrid">
+            <div class="box">
+              <h3>The data behind the image</h3>
+              <dl class="metadata">
+                <dt>Provenance</dt>
+                <dd>Original analytic phantom. No patient data.</dd>
+                <dt>Source matrix</dt>
+                <dd>128 × 128 × 96</dd>
+                <dt>Embedded matrix</dt>
+                <dd>128 × 128 × 96 (no downsampling)</dd>
+                <dt>Voxel spacing</dt>
+                <dd>2 × 2 × 2 mm</dd>
+                <dt>Physical extent</dt>
+                <dd>256 × 256 × 192 mm</dd>
+                <dt>Encoding</dt>
+                <dd>uint8 · activity = stored value / 32</dd>
+                <dt>Activity units</dt>
+                <dd>Arbitrary units (a.u.), not SUV</dd>
+                <dt>Tissue activity</dt>
+                <dd>GM 4 · WM 1 · scalp 0.5 · CSF and skull 0 a.u.</dd>
+                <dt>Hot spheres</dt>
+                <dd>6 mm and 12 mm diameter · 7 a.u.</dd>
+                <dt>Shells</dt>
+                <dd>Skull and scalp labels included</dd>
+              </dl>
+              <div class="lesionbuttons">
+                <button id="smallLesion">Locate 6 mm sphere</button
+                ><button id="largeLesion">Locate 12 mm sphere</button>
+              </div>
+            </div>
+            <figure class="box">
+              <h3>What fills the volume?</h3>
+              <canvas
+                id="histogram"
+                class="hist"
+                width="640"
+                height="240"
+                role="img"
+                aria-label="Histogram of nonzero activity values in the entire phantom"
+              ></canvas>
+              <figcaption class="caption">
+                Whole-volume activity histogram.<br />Zero-activity voxels
+                excluded; discrete tissue assignments.
+              </figcaption>
+              <p style="font-size: 14px; color: var(--muted); margin-top: 18px">
+                The sharp peaks come from assigned tissue values. This is a
+                deliberately simplified anatomy, not a segmented human brain or
+                an official BrainWeb volume.
+              </p>
+            </figure>
+          </div>
+          <div class="theorygrid p4mip">
+            <div class="theorycopy">
+              <div class="eyebrow">Lab / Volume projection</div>
+              <h3 style="margin: 12px 0">Turn the volume in your hand.</h3>
+              <p>
+                A maximum-intensity projection (MIP) keeps the highest activity
+                encountered along each sampled viewing ray. Rotate around the
+                superior–inferior axis to see how structures overlap.
+              </p>
+              <label class="sliderlabel" for="mipAngle"
+                >Viewing angle <output id="mipAngleValue">0°</output></label
+              ><input
+                id="mipAngle"
+                type="range"
+                min="0"
+                max="350"
+                step="10"
+                value="0"
+              />
+              <div class="buttonrow">
+                <button id="playMIP" aria-pressed="false">Rotate MIP</button>
+              </div>
+              <p class="caption">
+                Projection of the embedded 3D activity volume, not a
+                reconstruction from measured data. A 2 × 2 × 2 maximum pool
+                produces a 64 × 64 × 48 grid at 4 mm spacing; rays are sampled
+                every 2 mm using nearest voxels. Pooling preserves hot maxima
+                but broadens small structures. This approximate MIP is for
+                exploration, not quantification.
+              </p>
+              <p class="caption">
+                At 0°: R left, L right. Superior stays at the top. Other angles
+                combine anatomical directions. Rotation starts only when
+                requested and pauses when the tab is hidden.
+              </p>
+            </div>
+            <div class="theorypanel">
+              <canvas
+                id="mipCanvas"
+                width="768"
+                height="384"
+                role="img"
+                aria-label="Rotatable maximum-intensity projection of the synthetic three-dimensional brain volume"
+              ></canvas>
+              <div class="p4scale">
+                <div id="mipRamp" class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span>3.5</span><span>7 a.u.</span>
+                </div>
+              </div>
+              <p id="mipStatus" class="caption" role="status">
+                Computing the initial volume projection…
+              </p>
+              <p class="caption">
+                Uses the gallery’s Inferno / Greyscale selection. These are
+                assigned activity values. No patient identifiers,
+                radiopharmaceutical dose, acquisition time or calibration
+                factors are available, so an SUV colourbar would be misleading.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../reconstruction/"
+            ><small>Previous</small>Reconstruction lab</a
+          ><a class="next" href="../../reference/"
+            ><small>Next</small>Reference</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

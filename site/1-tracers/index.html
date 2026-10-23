@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Radiotracers and decay · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="How the isotope sets the clock and the molecule sets the target in PET, with an interactive decay and decay-correction model."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Radiotracers and decay" />
+    <meta
+      property="og:description"
+      content="How the isotope sets the clock and the molecule sets the target in PET, with an interactive decay and decay-correction model."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="tracers" data-features="theory">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 1 of 10</div>
+          <h1>Radiotracers and decay</h1>
+          <p class="lead">
+            A PET scan starts with a
+            <a
+              class="term"
+              data-term="radiotracer"
+              href="../reference/#g-radiotracer"
+              >radiotracer</a
+            >: a molecule that follows a biological process, labelled with a
+            positron-emitting isotope. The isotope decides how fast the signal
+            fades. The molecule decides what the image means.
+          </p>
+        </header>
+
+        <section class="theorysection" id="chapter1">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 1 / Tracers and decay</div>
+              <h2>
+                The isotope sets the clock.<br />The molecule sets the target.
+              </h2>
+            </div>
+          </div>
+          <div class="theorygrid">
+            <div class="theorycopy">
+              <p>
+                In β⁺ decay, a proton becomes a neutron while a positron and an
+                electron neutrino are emitted. The positron loses kinetic
+                energy, then annihilates with an electron. In the dominant
+                two-photon channel, each photon carries approximately 511 keV:
+                the electron rest energy mₑc².
+              </p>
+              <p>
+                FDG follows glucose transport and phosphorylation; its retention
+                is used to assess glucose metabolism. Amyloid ligands such as
+                florbetapir bind to fibrillar amyloid-β. Sharing F-18 does not
+                make these tracers measure the same biology.
+                <a
+                  href="https://pubmed.ncbi.nlm.nih.gov/7024169/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Deoxyglucose principle</a
+                >
+                ·
+                <a
+                  href="https://www.accessdata.fda.gov/drugsatfda_docs/label/2012/202008s000lbl.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >florbetapir binding mechanism</a
+                >.
+              </p>
+              <p>
+                Physical decay reduces the number of radioactive nuclei. A decay
+                correction refers measured activity back to a chosen time; it
+                cannot replace counts that were never collected or undo
+                biological clearance.
+              </p>
+              <div class="formula">
+                A(t) = A₀ · 2⁻ᵗ⁄ᵀ½<br />Acorrected(t) = A(t) · 2ᵗ⁄ᵀ½<br />Decays
+                in window = ∫ A(t) dt
+              </div>
+              <p>
+                Specific activity is activity per mass, such as Bq/g. Molar
+                activity is activity per amount, such as GBq/µmol. At the same
+                activity, more non-radioactive compound means more injected mass
+                and potentially more biological perturbation.
+              </p>
+              <p class="sourceNote">
+                F-18, C-11 and Ga-68 half-lives are rounded teaching values from
+                <a
+                  href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4894854/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Conti & Eriksson</a
+                >; O-15 uses
+                <a
+                  href="https://nucldata.tunl.duke.edu/nucldata/GroundStatedecays/15O.shtml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >TUNL nuclear data</a
+                >; Rb-82 uses 75.45 s from
+                <a
+                  href="https://www.nndc.bnl.gov/ensnds/82/Rb/hi_xng.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >NNDC evaluated nuclear data</a
+                >. The controls are simulation inputs, not dose recommendations.
+              </p>
+            </div>
+            <figure class="theorypanel">
+              <div class="theorycontrols">
+                <label
+                  >Isotope<select id="physIsotope">
+                    <option value="F18">F-18</option>
+                    <option value="C11">C-11</option>
+                    <option value="Ga68">Ga-68</option>
+                    <option value="O15">O-15</option>
+                    <option value="Rb82">Rb-82</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Initial activity
+                    <output id="activityValue">200 MBq</output></span
+                  ><input
+                    id="physActivity"
+                    type="range"
+                    min="10"
+                    max="800"
+                    step="10"
+                    value="200" /></label
+                ><label
+                  ><span
+                    >Window start time
+                    <output id="uptakeValue">0.50 half-lives</output></span
+                  ><input
+                    id="physUptake"
+                    type="range"
+                    min="0"
+                    max="4"
+                    step="0.05"
+                    value="0.5" /></label
+                ><label
+                  ><span
+                    >Window duration
+                    <output id="durationValue">0.10 half-lives</output></span
+                  ><input
+                    id="physDuration"
+                    type="range"
+                    min="0.02"
+                    max="1"
+                    step="0.02"
+                    value="0.1"
+                /></label>
+              </div>
+              <canvas
+                id="decayPlot"
+                width="760"
+                height="360"
+                role="img"
+                aria-label="Activity versus time with a decay-corrected overlay and selected acquisition window"
+              ></canvas>
+              <div class="plotkey">
+                <span>Physical activity</span
+                ><span class="teal">Decay-corrected activity</span
+                ><span class="amber">Sampling window</span>
+              </div>
+              <div class="theoryreads">
+                <div>
+                  <strong id="halfRead">—</strong><span>Physical half-life</span
+                  ><code>cited isotope value</code>
+                </div>
+                <div>
+                  <strong id="decayRead">—</strong
+                  ><span>Activity at window start</span><code>A₀ · 2⁻ᵗ⁄ᵀ½</code>
+                </div>
+                <div>
+                  <strong id="windowRead">—</strong
+                  ><span>Decays during window</span
+                  ><code>A₀(e⁻λt − e⁻λ(t+Δt))/λ</code>
+                </div>
+                <div>
+                  <strong id="positronRead">—</strong
+                  ><span>Positrons during window</span
+                  ><code>β⁺ fraction × decays</code>
+                </div>
+              </div>
+              <figcaption>
+                <span
+                  >Physical decay only; biological uptake and clearance are
+                  excluded.</span
+                >
+                <details class="assumptions">
+                  <summary>Figure details</summary>
+                  <p>
+                    Shading marks the sampling interval. Integrated decays
+                    include all nuclear decay branches; the positron readout
+                    applies the cited β⁺ fraction. Neither is a
+                    detected-coincidence count. The sliders span 0–4 half-lives
+                    for the start and 0.02–1 half-lives for duration; outputs
+                    are shown in minutes.
+                  </p>
+                </details>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section class="theorysection" id="positron-yield">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 1 / Positron yield and dose</div>
+              <h2>Not every decay makes a positron.</h2>
+            </div>
+          </div>
+          <div class="undergrid">
+            <div class="box">
+              <h3>Positron fraction</h3>
+              <p>
+                Some decays proceed by electron capture and emit no positron.
+                The positron fraction is 96.9% for F-18, 99.8% for C-11 and
+                99.9% for O-15. Ga-68 emits a positron in 88.9% of decays and
+                Rb-82 in about 95%.
+              </p>
+              <p>
+                The readout <em>Positrons during window</em> above multiplies
+                the decays by this fraction. The scanner scenes use the same
+                fraction to scale count rates.
+              </p>
+              <p class="sourceNote">
+                Positron fractions:
+                <a
+                  href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4894854/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Conti &amp; Eriksson (2016)</a
+                >, Tables 1 and 2. For Ga-68 and Rb-82 the table lists the two
+                main branches.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Patient dose</h3>
+              <p>
+                Administered activity sets both the count budget and the
+                radiation dose. For an adult FDG scan, the effective dose is
+                roughly 0.019 mSv per MBq administered. The dose for other
+                tracers, children and individual patients differs.
+              </p>
+              <p>
+                The activity sliders on this site are simulation inputs, not
+                dose recommendations.
+              </p>
+              <p class="sourceNote">
+                Dose coefficients:
+                <a
+                  href="https://doi.org/10.1177/0146645314558019"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >ICRP Publication 128 (2015)</a
+                >.
+              </p>
+            </div>
+          </div>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              The
+              <a
+                class="term"
+                data-term="half-life"
+                href="../reference/#g-half-life"
+                >half-life</a
+              >
+              sets how long you can image and how quickly the count rate falls.
+            </li>
+            <li>
+              The molecule, not the isotope, determines which biology the image
+              reflects.
+            </li>
+            <li>
+              Not every decay emits a positron. Ga-68 and Rb-82 lose noticeably
+              more than F-18.
+            </li>
+            <li>
+              Decay correction rescales activity to a reference time. It cannot
+              recover counts that were never detected.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../"
+            ><small>Previous</small>From Decay to Voxel</a
+          ><a class="next" href="../2-emission/"
+            ><small>Next</small>Chapter 2 · Positron range and
+            non-collinearity</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

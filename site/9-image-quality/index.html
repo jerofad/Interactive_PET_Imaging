@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Resolution, noise and quantification · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Resolution budgets, partial-volume recovery, count statistics, SUV and SUVR, and an introduction to dynamic PET and kinetic modelling."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Resolution, noise and quantification" />
+    <meta
+      property="og:description"
+      content="Resolution budgets, partial-volume recovery, count statistics, SUV and SUVR, and an introduction to dynamic PET and kinetic modelling."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="quality" data-features="theory advanced">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 9 of 10</div>
+          <h1>Resolution, noise and quantification</h1>
+          <p class="lead">
+            Two things limit what an image can tell you. Resolution loses
+            contrast in small objects. Noise sets how precisely you can measure
+            uptake.
+          </p>
+        </header>
+
+        <section id="chapter8">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">
+                Chapter 9 / Resolution &amp; partial volume
+              </div>
+              <h2>A small focus cannot fill its image.</h2>
+            </div>
+            <p>
+              Separate the physical resolution budget from the loss of contrast
+              when an object is small compared with that resolution.
+            </p>
+          </div>
+          <div class="theorygrid">
+            <div class="theorypanel">
+              <h3>An illustrative resolution budget</h3>
+              <div class="p4controls">
+                <label
+                  >Isotope
+                  <select id="resolutionIsotope">
+                    <option value="F18">F-18</option>
+                    <option value="C11">C-11</option>
+                    <option value="Ga68">Ga-68</option>
+                    <option value="O15">O-15</option>
+                    <option value="Rb82">Rb-82</option>
+                  </select></label
+                ><label
+                  ><input type="checkbox" id="resolutionDOI" /> 3 mm DOI depth
+                  uncertainty</label
+                >
+              </div>
+              <label class="sliderlabel" for="crystalSize"
+                >Crystal width <output id="crystalSizeValue"></output></label
+              ><input
+                id="crystalSize"
+                type="range"
+                min="2"
+                max="8"
+                step=".5"
+                value="4"
+              /><label class="sliderlabel" for="resolutionRing"
+                >Ring diameter <output id="resolutionRingValue"></output></label
+              ><input
+                id="resolutionRing"
+                type="range"
+                min="400"
+                max="1000"
+                step="20"
+                value="800"
+              /><label class="sliderlabel" for="radialOffset"
+                >Radial offset <output id="radialOffsetValue"></output></label
+              ><input
+                id="radialOffset"
+                type="range"
+                min="0"
+                max="180"
+                step="5"
+                value="0"
+              />
+              <dl class="theoryreads">
+                <div>
+                  <dt>Combined FWHM</dt>
+                  <dd id="resolutionValue"></dd>
+                </div>
+                <div>
+                  <dt>DOI / parallax contribution</dt>
+                  <dd id="parallaxValue"></dd>
+                </div>
+              </dl>
+              <p id="resolutionTerms" class="caption"></p>
+              <div class="formula">
+                FWHM ≈ 1.25 √[(d/2)² + r² + (0.0022 D)² + b² + p²]
+              </div>
+              <p class="caption">
+                Gaussian-equivalent quadrature inspired by
+                <a
+                  href="https://psec.uchicago.edu/library/applications/PET/Bill_moses_fundamental_limits.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Moses</a
+                >. Here d is crystal width, r effective range blur, D ring
+                diameter, b = 2 mm assumed decoding blur. Our parallax proxy p
+                converts uniform depth uncertainty (20 mm, or 3 mm with DOI) to
+                FWHM using the obliquity angle. This is a radial teaching
+                approximation, not a scanner performance specification. Settings
+                are independent of chapters 1–6.
+              </p>
+            </div>
+            <div class="theorypanel">
+              <h3>Recovering a hot sphere</h3>
+              <label class="sliderlabel" for="sphereDiameter"
+                >Sphere diameter
+                <output id="sphereDiameterValue"></output></label
+              ><input
+                id="sphereDiameter"
+                type="range"
+                min="2"
+                max="30"
+                step=".5"
+                value="6"
+              /><canvas
+                id="recoveryPlot"
+                width="640"
+                height="340"
+                role="img"
+                aria-label="Centre contrast recovery of a three-dimensional sphere versus diameter"
+              ></canvas>
+              <dl class="theoryreads">
+                <div>
+                  <dt>Centre contrast recovery</dt>
+                  <dd id="recoveryValue"></dd>
+                </div>
+                <div>
+                  <dt>Centre activity</dt>
+                  <dd id="sphereCentre"></dd>
+                </div>
+              </dl>
+              <canvas
+                id="sphereProfile"
+                width="640"
+                height="300"
+                role="img"
+                aria-label="True and blurred central profiles of a hot three-dimensional sphere"
+              ></canvas>
+              <div class="plotkey">
+                <span>Solid / blurred sphere</span
+                ><span class="p4dash">Dashed / true sphere</span>
+              </div>
+              <p class="caption">
+                True sphere 7 a.u.; infinite background 1 a.u. An exact 3D ball
+                convolved with an isotropic Gaussian gives the centre profile.
+                Recovery = (blurred centre − background) / (true sphere −
+                background). This is centre contrast recovery, not ROI-mean
+                recovery, SUVpeak or a fitted scanner PSF.
+              </p>
+            </div>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              Partial-volume effects include spill-out and spill-in. Object
+              shape, background, motion, voxel sampling, reconstruction and ROI
+              definition all matter. A recovery curve for one sphere model is
+              not a general patient correction.
+              <a
+                href="https://jnm.snmjournals.org/content/48/6/932"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Further reading: Soret, Bacharach & Buvat (2007).</a
+              >
+            </p>
+          </details>
+        </section>
+        <section id="chapter9">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 9 / Noise &amp; quantification</div>
+              <h2>More counts. A steadier estimate.</h2>
+            </div>
+            <p>
+              Count statistics determine precision. Calibration, reference time
+              and the choice of region determine what an uptake number means.
+            </p>
+          </div>
+          <div class="theorypanel">
+            <div class="p4controls">
+              <label
+                >Full acquisition, expected prompts
+                <select id="fractionCounts">
+                  <option value="100000">100,000</option>
+                  <option value="1000000" selected>1,000,000</option>
+                </select></label
+              ><button id="runFractions" class="primary">
+                Reconstruct four count levels
+              </button>
+            </div>
+            <p class="eyebrow">Synthetic phantom / same axial slice</p>
+            <div class="p4four">
+              <figure>
+                <canvas
+                  class="p4image"
+                  id="count10"
+                  width="320"
+                  height="320"
+                  role="img"
+                  aria-label="Phantom reconstruction at ten percent counts"
+                ></canvas>
+                <figcaption>10% · ideal noise 3.16×</figcaption>
+              </figure>
+              <figure>
+                <canvas
+                  class="p4image"
+                  id="count25"
+                  width="320"
+                  height="320"
+                  role="img"
+                  aria-label="Phantom reconstruction at twenty-five percent counts"
+                ></canvas>
+                <figcaption>25% · ideal noise 2×</figcaption>
+              </figure>
+              <figure>
+                <canvas
+                  class="p4image"
+                  id="count50"
+                  width="320"
+                  height="320"
+                  role="img"
+                  aria-label="Phantom reconstruction at fifty percent counts"
+                ></canvas>
+                <figcaption>50% · ideal noise 1.41×</figcaption>
+              </figure>
+              <figure>
+                <canvas
+                  class="p4image"
+                  id="count100"
+                  width="320"
+                  height="320"
+                  role="img"
+                  aria-label="Phantom reconstruction at full counts"
+                ></canvas>
+                <figcaption>100% · ideal noise 1×</figcaption>
+              </figure>
+            </div>
+            <div class="p4scale">
+              <div class="ramp"></div>
+              <div class="ticks">
+                <span>0</span><span>3.5</span><span>7 a.u. · shared scale</span>
+              </div>
+            </div>
+            <p id="fractionStatus" class="caption" role="status">
+              Choose Run to compare the same axial slice. OSEM: 3 iterations ×
+              20 subsets; 4 mm Gaussian post-filter; all corrections enabled.
+            </p>
+            <p class="caption">
+              Independent Poisson acquisitions with reproducible seeds, not
+              subsets of one event stream. The ideal relative counting standard
+              deviation is 1/√f. Reconstructed image noise is spatially
+              correlated and depends on the algorithm. Linear dose–time
+              interchangeability assumes unchanged physiology and count-rate
+              performance; dead time, randoms, decay and motion break that
+              approximation.
+            </p>
+          </div>
+          <div class="undergrid">
+            <div class="box">
+              <h3>What does SUV divide out?</h3>
+              <div class="formula">
+                SUV<sub>bw</sub> = C(t) / [A<sub>net</sub>(t) / W]<br />With
+                kBq/mL, MBq and kg: SUV = C × W / A
+              </div>
+              <p>
+                Activity concentration and net administered activity must refer
+                to the same decay reference time. Subtract residual activity and
+                use the appropriate calibration. Body-weight SUV is
+                conventionally reported as dimensionless under an approximate 1
+                g/mL density convention; the literal mass-normalised ratio has
+                units g/mL.
+              </p>
+              <p>
+                SUVmean averages a defined ROI. SUVmax selects its hottest voxel
+                and is especially sensitive to noise, voxel size and
+                reconstruction. SUVpeak averages a small prescribed volume and
+                is a different measurement.
+              </p>
+              <p>
+                SUVR divides target-region mean uptake by reference-region mean
+                uptake from the same acquisition. Amyloid PET often uses a
+                tracer- and protocol-specific cerebellar reference. Reference
+                region, acquisition window and processing must be specified; a
+                universal positivity cutoff is inappropriate.
+                <a
+                  href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3101877/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Example: florbetapir regional uptake study.</a
+                >
+              </p>
+            </div>
+            <div class="box">
+              <h3>Try a hypothetical calibrated measurement</h3>
+              <p class="caption">
+                These entered concentrations are illustrative. The embedded
+                phantom has no SUV calibration.
+              </p>
+              <div class="p4numbers">
+                <label
+                  >Target ROI mean (kBq/mL)<input
+                    id="suvMean"
+                    type="number"
+                    min="0"
+                    step=".1"
+                    value="5" /></label
+                ><label
+                  >Target voxel maximum (kBq/mL)<input
+                    id="suvMax"
+                    type="number"
+                    min="0"
+                    step=".1"
+                    value="8" /></label
+                ><label
+                  >Reference mean (kBq/mL)<input
+                    id="suvReference"
+                    type="number"
+                    min=".01"
+                    step=".1"
+                    value="2" /></label
+                ><label
+                  >Net activity at reference time (MBq)<input
+                    id="suvDose"
+                    type="number"
+                    min=".01"
+                    step="1"
+                    value="200" /></label
+                ><label
+                  >Body weight (kg)<input
+                    id="suvWeight"
+                    type="number"
+                    min=".01"
+                    step="1"
+                    value="70"
+                /></label>
+              </div>
+              <dl class="theoryreads">
+                <div>
+                  <dt>SUVmean</dt>
+                  <dd id="suvMeanRead"></dd>
+                </div>
+                <div>
+                  <dt>SUVmax</dt>
+                  <dd id="suvMaxRead"></dd>
+                </div>
+                <div>
+                  <dt>SUVR</dt>
+                  <dd id="suvrRead"></dd>
+                </div>
+              </dl>
+              <p id="suvStatus" class="caption" role="status"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="theorysection" id="kinetics">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 9 / Beyond a single number</div>
+              <h2>Dynamic PET follows the tracer over time.</h2>
+            </div>
+          </div>
+          <div class="undergrid">
+            <div class="box">
+              <h3>Static and dynamic scans</h3>
+              <p>
+                A static scan measures tissue activity in one time window, which
+                is what SUV summarises. A dynamic scan records a series of
+                frames from injection onwards. With the tracer concentration in
+                arterial plasma as an input function, a compartment model can
+                estimate rate constants for delivery, trapping and washout.
+              </p>
+              <p class="sourceNote">
+                <a
+                  href="https://doi.org/10.1097/00004647-200106000-00002"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Gunn, Gunn &amp; Cunningham (2001)</a
+                >.
+              </p>
+            </div>
+            <div class="box">
+              <h3>Patlak analysis</h3>
+              <p>
+                For a tracer that becomes trapped, such as FDG, a
+                <a class="term" data-term="patlak" href="../reference/#g-patlak"
+                  >Patlak</a
+                >
+                plot becomes linear after early equilibration. Its slope
+                estimates the net influx rate K<sub>i</sub>. SUV tracks K<sub
+                  >i</sub
+                >
+                only when uptake time and plasma clearance are similar between
+                scans.
+              </p>
+              <p class="sourceNote">
+                <a
+                  href="https://doi.org/10.1038/jcbfm.1983.1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Patlak, Blasberg &amp; Fenstermacher (1983)</a
+                >. This site has no dynamic model; the phantom is static.
+              </p>
+            </div>
+          </div>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              Objects that are not much larger than the resolution FWHM lose
+              contrast through
+              <a
+                class="term"
+                data-term="partial-volume"
+                href="../reference/#g-partial-volume"
+                >partial-volume effects</a
+              >.
+            </li>
+            <li>
+              <a class="term" data-term="suv" href="../reference/#g-suv">SUV</a>
+              normalises activity concentration by injected activity and body
+              weight. SUVmax is especially sensitive to noise.
+            </li>
+            <li>
+              A static SUV is a snapshot. Dynamic imaging and kinetic modelling
+              separate delivery from uptake.
+            </li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../8-reconstruction/"
+            ><small>Previous</small>Chapter 8 · Reconstruction</a
+          ><a class="next" href="../10-artifacts/"
+            ><small>Next</small>Chapter 10 · Artifacts</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

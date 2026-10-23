@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Coincidences · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="Trues, scatter and randoms, count-rate curves and NECR, plus a 3D scanner scene and a nanosecond coincidence timeline."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Coincidences" />
+    <meta
+      property="og:description"
+      content="Trues, scatter and randoms, count-rate curves and NECR, plus a 3D scanner scene and a nanosecond coincidence timeline."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="coincidences" data-features="theory scenes">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="./" aria-current="page"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="../labs/scanner/">Scanner lab</a></li>
+          <li><a href="../labs/reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../labs/viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Chapter 4 of 10</div>
+          <h1>Coincidences</h1>
+          <p class="lead">
+            Two detections close enough in time are paired into a coincidence.
+            The pair defines a
+            <a class="term" data-term="lor" href="../reference/#g-lor"
+              >line of response</a
+            >
+            that the annihilation lies on, or near. Not every pair is a
+            <a class="term" data-term="trues" href="../reference/#g-trues"
+              >true coincidence</a
+            >.
+          </p>
+        </header>
+
+        <section class="theorysection" id="chapter4">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 4 / Trues, scatter and randoms</div>
+              <h2>
+                More activity does not always<br />mean more useful information.
+              </h2>
+            </div>
+          </div>
+          <div class="theorygrid">
+            <div class="theorycopy">
+              <p>
+                A true coincidence pairs two unscattered photons from one
+                annihilation. A scattered coincidence includes a photon
+                deflected in the object. A random coincidence pairs unrelated
+                singles.
+              </p>
+              <p>
+                The random rate rises with both singles rates and the timing
+                acceptance width. Narrowing the window rejects more randoms, but
+                it must still accommodate photon flight-time differences and
+                timing uncertainty.
+              </p>
+              <div class="formula">
+                W = 2τ (full timing acceptance width)<br />R ≈ W · S₁ · S₂ = 2τ
+                S₁ S₂<br />Scatter fraction = S / (T + S)<br />NECR = T² / (T +
+                S + 2R)
+              </div>
+              <p>
+                The 2R denominator here represents randoms estimated with an
+                independent, equally noisy delayed window. A negligible-noise
+                random estimate instead gives a +R term. NECR is a count-rate
+                figure of merit, not a complete image-quality measure.
+              </p>
+              <div class="theorycontrols">
+                <label
+                  ><span
+                    >Full coincidence window W
+                    <output id="windowNsValue">4 ns</output></span
+                  ><input
+                    id="coincidenceWindow"
+                    type="range"
+                    min="2"
+                    max="8"
+                    step="0.5"
+                    value="4" /></label
+                ><label
+                  ><span
+                    >Activity at scan time
+                    <output id="scanActivityValue">200 MBq</output></span
+                  ><input
+                    id="scanActivity"
+                    type="range"
+                    min="0"
+                    max="800"
+                    step="5"
+                    value="200" /></label
+                ><label
+                  ><span
+                    >Shared energy threshold
+                    <output id="necrEnergyValue">435 keV</output></span
+                  ><input
+                    id="necrEnergy"
+                    type="range"
+                    min="350"
+                    max="480"
+                    step="5"
+                    value="435"
+                /></label>
+              </div>
+              <p class="theoryhint">
+                Activity here is present at scan time. It is separate from
+                Chapter 1’s initial activity.
+              </p>
+            </div>
+            <figure class="theorypanel">
+              <canvas
+                id="necrPlot"
+                width="760"
+                height="360"
+                role="img"
+                aria-label="Teaching-model true, scattered, random and noise-equivalent count rates versus activity, with peak NECR marked"
+              ></canvas>
+              <div class="plotkey">
+                <span class="pink">Trues</span
+                ><span class="scatter">Scatter</span
+                ><span class="dotted">Randoms</span
+                ><span class="amber">NECR</span>
+              </div>
+              <div class="theoryreads">
+                <div>
+                  <strong id="necrRead">—</strong
+                  ><span>NECR at selected activity</span
+                  ><code>T² / (T + S + 2R)</code>
+                </div>
+                <div>
+                  <strong id="sfRead">—</strong><span>Scatter fraction</span
+                  ><code>S / (T + S)</code>
+                </div>
+                <div>
+                  <strong id="peakRead">—</strong
+                  ><span>Peak in plotted interval</span
+                  ><code>argmax NECR(A), 1 MBq grid</code>
+                </div>
+                <div>
+                  <strong id="randomRead">—</strong><span>Random rate</span
+                  ><code>W S₁S₂</code>
+                </div>
+                <div>
+                  <strong id="deadRead">—</strong
+                  ><span>Singles dead-time loss</span
+                  ><code>1 − exp(−tdead Sin)</code>
+                </div>
+                <div>
+                  <strong id="singlesRead">—</strong
+                  ><span>Accepted singles, each stream</span
+                  ><code>Sin exp(−tdead Sin)</code>
+                </div>
+              </div>
+              <figcaption>
+                <span
+                  >Analytic count-rate model, not scanner data or a NEMA
+                  test.</span
+                >
+                <details class="assumptions">
+                  <summary>Figure details</summary>
+                  <p>
+                    Changing the shared energy window changes the accepted
+                    photopeak and tail fractions. The peak is computed from the
+                    displayed model.
+                  </p>
+                </details>
+              </figcaption>
+            </figure>
+          </div>
+          <p>
+            Some isotopes also emit a
+            <a
+              class="term"
+              data-term="prompt-gamma"
+              href="../reference/#g-prompt-gamma"
+              >prompt gamma</a
+            >
+            ray with the positron. Ga-68 emits 1077 keV in 3.2% of decays and
+            Rb-82 emits 777 keV in 15.1%. A prompt gamma that lands in the
+            energy window can pair with an annihilation photon and add a
+            background that standard randoms and scatter estimates do not fully
+            describe. This model does not include it.
+            <span class="sourceNote"
+              >Source:
+              <a
+                href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4894854/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Conti &amp; Eriksson (2016)</a
+              >, Table 2.</span
+            >
+          </p>
+          <details>
+            <summary>Inspect the count-rate assumptions</summary>
+            <p>
+              Let p and q be the accepted photopeak and body-tail fractions from
+              Chapter 3. Two equivalent singles streams have Sin = 30,000 A
+              (0.65p + 0.35q) s⁻¹, where A is in MBq. With an assumed
+              paralyzable dead time of 40 ns, L = exp(−40 × 10⁻⁹ Sin). Rates are
+              T = 1,500 A p²L², S = 2,000 A pqL² and R = W(SinL)², in s⁻¹. These
+              coefficients and mixture weights are chosen teaching inputs, not
+              fitted scanner parameters. True timing acceptance is assumed to be
+              one throughout the available window range. No prompt-gamma or
+              pile-up spectrum model is included.
+            </p>
+            <p>
+              Rate definitions and random estimation:
+              <a
+                href="https://www-pub.iaea.org/MTCD/Publications/PDF/Pub1393_web.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                >IAEA PET/CT quality assurance</a
+              >. Do not use the displayed peak to choose a clinical injected
+              activity.
+            </p>
+          </details>
+        </section>
+        <section id="scanner" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 4 / Follow a coincidence</div>
+              <h2>Follow a coincidence through the ring.</h2>
+            </div>
+            <p>
+              A to-scale detector ring surrounds the embedded brain phantom. The
+              body and bed are schematic. Activity and attenuation exist only in
+              the phantom head.
+            </p>
+          </div>
+          <div class="recordbar" aria-label="Scanner recording controls">
+            <label class="recordOption"
+              >Frame
+              <select id="scannerAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="scannerClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="scannerFullscreen">
+              Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="scannerRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="scannerGL"
+                class="sceneGL"
+                aria-label="Interactive three-dimensional PET ring, phantom activity point cloud, bed and photon histories"
+                role="img"
+              ></canvas
+              ><canvas
+                id="scannerHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="scannerFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="scannerPlay" class="primary" aria-pressed="false">
+                Play acquisition</button
+              ><button id="scannerReset">Reset</button
+              ><label
+                >Camera
+                <select id="scannerCamera">
+                  <option value="overview">Overview</option>
+                  <option value="inside">Inside ring</option>
+                  <option value="slice">Transaxial slice</option>
+                  <option value="block">Exploded detector block</option>
+                </select></label
+              ><label
+                ><input id="scannerHousing" type="checkbox" checked />
+                Housing</label
+              ><label
+                ><input id="showTrues" type="checkbox" checked /> Trues</label
+              ><label
+                ><input id="showScatter" type="checkbox" checked />
+                Scatter</label
+              ><label
+                ><input id="showRandoms" type="checkbox" checked />
+                Randoms</label
+              >
+            </div>
+            <label class="sliderlabel" for="scannerProgress"
+              >Scrub acquisition
+              <output id="scannerProgressValue">0%</output></label
+            ><input
+              id="scannerProgress"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="0"
+            />
+            <p class="caption">
+              Playback compresses the selected scan into 24 seconds. Individual
+              histories are representative illustrations, not every count in the
+              live slice panels. Event filters hide paths without changing data.
+              Nothing plays automatically.
+            </p>
+            <details open>
+              <summary>Tracer and coincidence settings</summary>
+              <div class="sceneSettings">
+                <label
+                  >Isotope<select id="sceneIsotope">
+                    <option value="F18" selected>F-18</option>
+                    <option value="C11">C-11</option>
+                    <option value="Ga68">Ga-68</option>
+                    <option value="O15">O-15</option>
+                    <option value="Rb82">Rb-82</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Activity at reference time
+                    <output id="sceneActivityValue">200 MBq</output></span
+                  ><input
+                    id="sceneActivity"
+                    type="range"
+                    min="10"
+                    max="800"
+                    step="10"
+                    value="200" /></label
+                ><label
+                  ><span
+                    >Lower energy level
+                    <output id="sceneEnergyValue">435 keV</output></span
+                  ><input
+                    id="sceneEnergy"
+                    type="range"
+                    min="350"
+                    max="480"
+                    step="5"
+                    value="435" /></label
+                ><label
+                  ><span
+                    >Full coincidence window
+                    <output id="sceneWindowValue">4 ns</output></span
+                  ><input
+                    id="sceneWindow"
+                    type="range"
+                    min="2"
+                    max="8"
+                    step="0.5"
+                    value="4" /></label
+                ><label
+                  >TOF timing FWHM<select id="sceneTOF">
+                    <option value="0">Off</option>
+                    <option value="600">600 ps</option>
+                    <option value="400">400 ps</option>
+                    <option value="200" selected>200 ps</option>
+                    <option value="100">100 ps</option>
+                  </select></label
+                >
+              </div>
+              <p class="caption">
+                The <a href="../labs/scanner/">scanner lab</a> adds ring,
+                crystal, timing-mode and reconstruction settings. Longer FOV
+                accepts more oblique lines; smaller crystals increase detector
+                count. Crystal depth and DOI change the off-axis resolution
+                budget. Material selects cited energy-resolution and light-decay
+                examples. Rendered detector blocks group neighbouring crystals;
+                the exploded view resolves an 8 × 8 array. Detector capture uses
+                each material’s 511 keV attenuation coefficient (LSO value for
+                LYSO;
+                <a
+                  href="https://doi.org/10.3389/fphy.2022.816384"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Gonzalez-Montoro et al. 2022</a
+                >, Table 1). Count rates scale with each isotope’s positron
+                fraction.
+                <a href="../reference/#tradeoffs">Parameter trade-offs</a>.
+              </p>
+            </details>
+          </div>
+          <dl class="sceneReadouts">
+            <div>
+              <dt>Cumulative prompts</dt>
+              <dd id="sceneCounts">—</dd>
+              <dd class="note">sampled T + S + R</dd>
+            </div>
+            <div>
+              <dt>Trues / scatter / randoms</dt>
+              <dd id="sceneTSR">—</dd>
+              <dd class="note">independent Poisson components</dd>
+            </div>
+            <div>
+              <dt>Model NECR</dt>
+              <dd id="sceneNECR">—</dd>
+              <dd class="note">T² / (T + S + 2R)</dd>
+            </div>
+            <div>
+              <dt>Model scatter / random fractions</dt>
+              <dd id="sceneSF">—</dd>
+              <dd class="note">S/(T+S) · R/(T+S+R)</dd>
+            </div>
+            <div>
+              <dt>Model randoms rate</dt>
+              <dd id="sceneRandomRate">—</dd>
+              <dd class="note">R after energy and timing selection</dd>
+            </div>
+            <div>
+              <dt>Model singles dead-time loss</dt>
+              <dd id="sceneDead">—</dd>
+              <dd class="note">1 − exp(−40 ns × input singles)</dd>
+            </div>
+            <div>
+              <dt>Activity at scan / corrected</dt>
+              <dd id="sceneDecay">—</dd>
+              <dd class="note">A₀ × 2⁻ᵗ⁄ᵀ½ / back to reference</dd>
+            </div>
+            <div>
+              <dt>Acquisition time</dt>
+              <dd id="sceneTime">—</dd>
+              <dd class="note">selected duration × playhead</dd>
+            </div>
+            <div>
+              <dt>Resolution: centre / 150 mm off-axis</dt>
+              <dd id="sceneResolution">—</dd>
+              <dd class="note">1.25 × quadrature budget</dd>
+            </div>
+          </dl>
+          <p id="scannerStatus" role="status" class="caption">
+            Play to calculate the cumulative acquisition. The 3D view can be
+            explored without running a scan.
+          </p>
+          <div class="sceneDiagnostics">
+            <figure class="scenePanel">
+              <h3>Cumulative 2D sinogram</h3>
+              <canvas
+                id="sceneSino"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Cumulative 2D sinogram, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="sceneSinoMax">— counts/bin</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3>Current slice reconstruction</h3>
+              <canvas
+                id="sceneRecon"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Current slice reconstruction, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="sceneReconMax">7 a.u.</span>
+                </div>
+              </div>
+            </figure>
+            <div class="scenePanel">
+              <h3>The most recent illustrated pair</h3>
+              <dl class="metadata">
+                <dt>Class</dt>
+                <dd id="eventClass">—</dd>
+                <dt>Detector IDs</dt>
+                <dd id="eventDetectors">—</dd>
+                <dt>Energy pair</dt>
+                <dd id="eventEnergy">—</dd>
+                <dt>Timing difference</dt>
+                <dd id="eventDelta">—</dd>
+                <dt>Illustrated T / S / R</dt>
+                <dd id="eventCounts">0 / 0 / 0</dd>
+              </dl>
+              <p class="caption" style="margin-top: 18px">
+                Phantom emission positions are activity-weighted. An exponential
+                radial range proxy, ≈0.50° projected pair-angle FWHM
+                non-collinearity, water-equivalent attenuation and at most one
+                Klein–Nishina scatter per photon precede energy and timing
+                gates. Photon markers are enlarged; flight is slowed for
+                inspection.
+              </p>
+            </div>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              The 3D histories use approximate 4 mm attenuation integration and
+              μ at 511 keV even after scattering. Random candidates pair
+              unrelated emissions, conditioned on the timing window. The slice
+              panels instead accumulate Poisson increments from a separate 2D
+              model with scan-averaged rates, toy scatter shape and ideal known
+              correction expectations. The analytic 2D-mode rate factors are
+              assumed (0.18 for trues and an additional 0.35 for scatter); FOV
+              uses central-point solid angle and detector depth uses exponential
+              capture. These are illustrative scalings, not scanner
+              specifications; this is not GATE, Geant4 or SimSET. With TOF off,
+              an assumed 600 ps timing jitter still applies to the coincidence
+              test for every material.
+            </p>
+          </details>
+        </section>
+        <section id="coincidence-timeline" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">
+                Chapter 4 / One coincidence, frame by frame
+              </div>
+              <h2>The flight is short. The light lasts longer.</h2>
+            </div>
+            <p>
+              Separate travel time, pulse shape, timestamp extraction and energy
+              integration. The same event can have a nanosecond flight and a
+              much longer scintillation tail.
+            </p>
+          </div>
+          <div
+            class="recordbar"
+            aria-label="Coincidence timeline recording controls"
+          >
+            <label class="recordOption"
+              >Frame
+              <select id="timelineAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="timelineClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="timelineFullscreen">
+              Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="timelineRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="timelineGL"
+                class="sceneGL"
+                aria-label="Three-dimensional linear nanosecond timeline with two scintillation pulses, CFD timestamps and delayed copies"
+                role="img"
+              ></canvas
+              ><canvas
+                id="timelineHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="timelineFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="timelinePlay" class="primary" aria-pressed="false">
+                Play timeline</button
+              ><label
+                >Act
+                <select id="timelineAct">
+                  <option value="0">1 · Decay, range and photon flight</option>
+                  <option value="1">2 · Scintillation and timestamps</option>
+                  <option value="2">
+                    3 · Energy integration and prompt gate
+                  </option>
+                  <option value="3">4 · Delayed-window comparison</option>
+                </select></label
+              ><label
+                ><input id="timelineLoop" type="checkbox" checked /> Loop all
+                acts</label
+              ><label
+                ><input id="timelineZoom" type="checkbox" checked /> Flight /
+                timing close-up (0–6 ns)</label
+              >
+            </div>
+            <div class="sceneSettings">
+              <label
+                ><span
+                  >Source position toward detector 1
+                  <output id="timelinePositionValue">60 mm</output></span
+                ><input
+                  id="timelinePosition"
+                  type="range"
+                  min="-120"
+                  max="120"
+                  step="5"
+                  value="60" /></label
+              ><label
+                ><span
+                  >Scrub physical time
+                  <output id="timelineTimeValue">0 ns</output></span
+                ><input
+                  id="timelineTime"
+                  type="range"
+                  min="0"
+                  max="6"
+                  step=".01"
+                  value="0"
+              /></label>
+            </div>
+          </div>
+          <dl class="sceneReadouts">
+            <div>
+              <dt>Flight to detector 1 / 2</dt>
+              <dd id="timelineFlights">—</dd>
+              <dd class="note">(D/2 ∓ x) / c</dd>
+            </div>
+            <div>
+              <dt>Timing difference / TOF position</dt>
+              <dd id="timelineDelta">—</dd>
+              <dd class="note">Δt = t₂−t₁ / x = cΔt÷2</dd>
+            </div>
+            <div>
+              <dt>20% constant-fraction timestamps</dt>
+              <dd id="timelineCFD">—</dd>
+              <dd class="note">rising crossings of normalised pulse</dd>
+            </div>
+            <div>
+              <dt>Light decay / energy gate</dt>
+              <dd id="timelinePulse">—</dd>
+              <dd class="note">cited τ / assumed gate 5τ</dd>
+            </div>
+            <div>
+              <dt>Prompt timing decision</dt>
+              <dd id="timelineGate">—</dd>
+              <dd class="note">|Δt| ≤ full window ÷ 2</dd>
+            </div>
+            <div>
+              <dt>Energy-window decision</dt>
+              <dd id="timelineEnergy">—</dd>
+              <dd class="note" id="timelineEnergyWindow">ideal 511 keV deposits</dd>
+            </div>
+            <div>
+              <dt>TOF localisation FWHM</dt>
+              <dd id="timelineTOF">—</dd>
+              <dd class="note">c × coincidence timing FWHM ÷ 2</dd>
+            </div>
+          </dl>
+          <div class="theorypanel">
+            <h3>Pulse amplitudes on a linear time axis</h3>
+            <canvas
+              id="timelinePlot"
+              width="960"
+              height="320"
+              role="img"
+              aria-label="Normalised scintillation pulses versus physical nanosecond time"
+            ></canvas>
+            <div class="plotkey">
+              <span class="pink">Detector 1</span
+              ><span class="amber">Detector 2</span
+              ><span class="dotted">Delayed copy of detector 1</span>
+            </div>
+            <p id="timelineStatus" role="status" class="caption"></p>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              t = 0 is annihilation. The decay-to-annihilation interval is shown
+              as a conceptual prelude: positron slowing and annihilation
+              lifetime depend on material, and positronium can introduce
+              nanosecond delays. No universal isotope-only delay is asserted.
+              Pulses use an assumed 0.5 ns rise, the cited material decay, a 20%
+              CFD fraction and a 5τ energy gate. A 500 ns delayed copy
+              illustrates the principle; it rejects this true pair. Random
+              estimates require other, unrelated singles. These are teaching
+              electronics, not a commercial timing chain.
+              <a
+                href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9829407/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Positronium lifetime context</a
+              >.
+            </p>
+          </details>
+        </section>
+        <aside class="takeaways" aria-labelledby="takeawaysTitle">
+          <h2 id="takeawaysTitle">Key takeaways</h2>
+          <ul>
+            <li>
+              Trues carry the signal.
+              <a class="term" data-term="scatter" href="../reference/#g-scatter"
+                >Scatter</a
+              >
+              puts it on the wrong line.
+              <a class="term" data-term="randoms" href="../reference/#g-randoms"
+                >Randoms</a
+              >
+              add a background that grows with the square of activity.
+            </li>
+            <li>
+              <a class="term" data-term="necr" href="../reference/#g-necr"
+                >NECR</a
+              >
+              peaks at a finite activity. Beyond the peak, more activity adds
+              more noise than signal.
+            </li>
+            <li>A delayed timing window measures the random rate directly.</li>
+          </ul>
+        </aside>
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../3-detection/"
+            ><small>Previous</small>Chapter 3 · Photon detection</a
+          ><a class="next" href="../5-data/"
+            ><small>Next</small>Chapter 5 · From coincidences to data</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

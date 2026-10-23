@@ -1,0 +1,138 @@
+{
+ "annihilation": {
+  "term": "Annihilation",
+  "short": "A positron and an electron convert into, most often, two photons of about 511 keV each."
+ },
+ "attenuation": {
+  "term": "Attenuation",
+  "short": "Loss of photons from a line of response by absorption or scattering in the body."
+ },
+ "ctr": {
+  "term": "CTR",
+  "short": "Coincidence timing resolution: the FWHM of the measured arrival-time difference for true pairs."
+ },
+ "dead-time": {
+  "term": "Dead time",
+  "short": "Time during which a detector or its electronics cannot record a new event."
+ },
+ "doi": {
+  "term": "DOI",
+  "short": "Depth of interaction: where along the crystal depth the photon interacted. Knowing it reduces parallax blur."
+ },
+ "energy-window": {
+  "term": "Energy window",
+  "short": "The accepted range of measured photon energies, for example 435–650 keV."
+ },
+ "fbp": {
+  "term": "FBP",
+  "short": "Filtered backprojection: an analytic reconstruction that ramp-filters projections and smears them back."
+ },
+ "fwhm": {
+  "term": "FWHM",
+  "short": "Full width at half maximum: the width of a peak at half its height."
+ },
+ "half-life": {
+  "term": "Half-life",
+  "short": "The time for half of the radioactive nuclei in a sample to decay."
+ },
+ "list-mode": {
+  "term": "List mode",
+  "short": "Storage of each coincidence as a record with its detector pair, time and often energy."
+ },
+ "lor": {
+  "term": "LOR",
+  "short": "Line of response: the line between the two detectors that recorded a coincidence."
+ },
+ "michelogram": {
+  "term": "Michelogram",
+  "short": "A map of detector-ring pairs showing which axial combinations are accepted and how they are grouped."
+ },
+ "mlem": {
+  "term": "MLEM",
+  "short": "Maximum-likelihood expectation maximisation: an iterative reconstruction for Poisson data using all projections per update."
+ },
+ "mu-map": {
+  "term": "μ-map",
+  "short": "An image of linear attenuation coefficients at 511 keV, used for attenuation correction."
+ },
+ "necr": {
+  "term": "NECR",
+  "short": "Noise-equivalent count rate, T²/(T+S+2R): a count-rate figure of merit that penalises scatter and randoms."
+ },
+ "non-collinearity": {
+  "term": "Non-collinearity",
+  "short": "The small deviation of the two annihilation photons from exactly 180°, about 0.5° FWHM."
+ },
+ "normalisation": {
+  "term": "Normalisation",
+  "short": "Correction for unequal efficiency between detector pairs."
+ },
+ "osem": {
+  "term": "OSEM",
+  "short": "Ordered-subset EM: MLEM that updates the image with interleaved subsets of projection angles."
+ },
+ "partial-volume": {
+  "term": "Partial-volume effect",
+  "short": "Loss of apparent contrast in objects that are small relative to the resolution, through spill-out and spill-in."
+ },
+ "patlak": {
+  "term": "Patlak analysis",
+  "short": "A graphical method that estimates the net influx rate Ki of an irreversibly trapped tracer."
+ },
+ "positron-range": {
+  "term": "Positron range",
+  "short": "The distance a positron travels before it annihilates."
+ },
+ "prompt-gamma": {
+  "term": "Prompt gamma",
+  "short": "A gamma ray emitted together with the positron by some isotopes, such as Ga-68 and Rb-82."
+ },
+ "psf": {
+  "term": "PSF",
+  "short": "Point-spread function: the image of a point source. PSF modelling includes it in the system matrix."
+ },
+ "radiotracer": {
+  "term": "Radiotracer",
+  "short": "A biologically active molecule labelled with a radioactive isotope."
+ },
+ "randoms": {
+  "term": "Randoms",
+  "short": "Accidental coincidences between photons from two unrelated annihilations."
+ },
+ "scatter": {
+  "term": "Scatter",
+  "short": "Coincidences in which at least one photon changed direction in the body before detection."
+ },
+ "scintillator": {
+  "term": "Scintillator",
+  "short": "A crystal that converts deposited gamma-ray energy into a pulse of visible light."
+ },
+ "sinogram": {
+  "term": "Sinogram",
+  "short": "A histogram of coincidences indexed by line position s and angle φ."
+ },
+ "sipm": {
+  "term": "SiPM",
+  "short": "Silicon photomultiplier: a solid-state sensor that converts scintillation light into an electrical pulse."
+ },
+ "suv": {
+  "term": "SUV",
+  "short": "Standardised uptake value: tissue activity concentration divided by injected activity per body weight."
+ },
+ "suvr": {
+  "term": "SUVR",
+  "short": "SUV ratio: mean uptake in a target region divided by mean uptake in a reference region."
+ },
+ "system-matrix": {
+  "term": "System matrix",
+  "short": "The model A whose element Aij is the expected contribution of voxel j to measurement bin i."
+ },
+ "tof": {
+  "term": "TOF",
+  "short": "Time of flight: using the photons’ arrival-time difference to localise an event along its line of response."
+ },
+ "trues": {
+  "term": "Trues",
+  "short": "Coincidences from one annihilation whose two photons both reached the detectors unscattered."
+ }
+}

@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Scanner lab · From Decay to Voxel</title>
+    <meta
+      name="description"
+      content="A to-scale 3D PET ring with a synthetic brain phantom: change the tracer, detector and acquisition, play an acquisition, and see the sinogram and reconstruction build up."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="From Decay to Voxel" />
+    <meta property="og:title" content="Scanner lab" />
+    <meta
+      property="og:description"
+      content="A to-scale 3D PET ring with a synthetic brain phantom: change the tracer, detector and acquisition, play an acquisition, and see the sinogram and reconstruction build up."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="theme-color" content="#0c121c" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1520'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23f2b65e' stroke-width='3'/%3E%3Cpath d='M5 23L27 9' stroke='%23e880bd' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff825e'/%3E%3C/svg%3E"
+    />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("pet-theme");
+          if (t === "dark" || t === "light")
+            document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body data-page="lab-scanner" data-features="theory scenes">
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="wrap">
+      <header class="top sitehead">
+        <a class="brand" href="../../"
+          ><span class="mark" aria-hidden="true"></span>From Decay to Voxel</a
+        >
+        <div class="topright">
+          <button
+            class="menubutton"
+            id="menuButton"
+            aria-expanded="false"
+            aria-controls="siteNav"
+          >
+            Contents</button
+          ><label
+            ><span class="eyebrow">Theme </span
+            ><select id="theme" aria-label="Colour theme">
+              <option value="system">System</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select></label
+          >
+        </div>
+      </header>
+      <nav class="sitenav" id="siteNav" aria-label="Site" data-open="false">
+        <ol class="pipeline">
+          <li>
+            <a href="../../1-tracers/"
+              ><span class="num">1</span><span class="lbl">Tracers</span></a
+            >
+          </li>
+          <li>
+            <a href="../../2-emission/"
+              ><span class="num">2</span><span class="lbl">Emission</span></a
+            >
+          </li>
+          <li>
+            <a href="../../3-detection/"
+              ><span class="num">3</span><span class="lbl">Detection</span></a
+            >
+          </li>
+          <li>
+            <a href="../../4-coincidences/"
+              ><span class="num">4</span
+              ><span class="lbl">Coincidences</span></a
+            >
+          </li>
+          <li>
+            <a href="../../5-data/"
+              ><span class="num">5</span><span class="lbl">Data</span></a
+            >
+          </li>
+          <li>
+            <a href="../../6-tof/"
+              ><span class="num">6</span
+              ><span class="lbl">Time of flight</span></a
+            >
+          </li>
+          <li>
+            <a href="../../7-corrections/"
+              ><span class="num">7</span><span class="lbl">Corrections</span></a
+            >
+          </li>
+          <li>
+            <a href="../../8-reconstruction/"
+              ><span class="num">8</span
+              ><span class="lbl">Reconstruction</span></a
+            >
+          </li>
+          <li>
+            <a href="../../9-image-quality/"
+              ><span class="num">9</span
+              ><span class="lbl">Image quality</span></a
+            >
+          </li>
+          <li>
+            <a href="../../10-artifacts/"
+              ><span class="num">10</span><span class="lbl">Artifacts</span></a
+            >
+          </li>
+        </ol>
+        <ul class="navextra">
+          <li class="navhead">Labs</li>
+          <li><a href="./" aria-current="page">Scanner lab</a></li>
+          <li><a href="../reconstruction/">Reconstruction lab</a></li>
+          <li><a href="../viewer/">Phantom viewer</a></li>
+          <li class="navhead">More</li>
+          <li><a href="../../reference/">Reference</a></li>
+        </ul>
+      </nav>
+      <main id="main" tabindex="-1">
+        <div id="error" class="error" role="alert" hidden></div>
+        <noscript
+          ><p class="noscript">
+            The interactive figures need JavaScript. The text, equations and
+            references remain readable.
+          </p></noscript
+        >
+        <header class="pagehead">
+          <div class="eyebrow">Lab</div>
+          <h1>Scanner lab</h1>
+          <p class="lead">
+            This is the full sandbox. Change the tracer, detector and
+            acquisition, then play a scan. The sinogram bench, reconstruction
+            film and timeline below all follow these settings.
+          </p>
+        </header>
+        <div class="key" aria-label="Consistent figure colour key">
+          <span><i></i>Activity</span
+          ><span><i class="phot"></i>Photons / LORs</span
+          ><span><i class="det"></i>Detectors</span
+          ><span><i class="scat"></i>Scatter — dashed</span
+          ><span><i class="rand"></i>Randoms · dotted</span
+          ><span><i class="anat"></i>Anatomy</span>
+        </div>
+        <section id="scanner" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Lab / Inside the scanner</div>
+              <h2>Follow a coincidence through the ring.</h2>
+            </div>
+            <p>
+              A to-scale detector ring surrounds the embedded brain phantom. The
+              body and bed are schematic. Activity and attenuation exist only in
+              the phantom head.
+            </p>
+          </div>
+          <div class="recordbar" aria-label="Scanner recording controls">
+            <label class="recordOption"
+              >Frame
+              <select id="scannerAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="scannerClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="scannerFullscreen">
+              Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="scannerRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="scannerGL"
+                class="sceneGL"
+                aria-label="Interactive three-dimensional PET ring, phantom activity point cloud, bed and photon histories"
+                role="img"
+              ></canvas
+              ><canvas
+                id="scannerHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="scannerFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="scannerPlay" class="primary" aria-pressed="false">
+                Play acquisition</button
+              ><button id="scannerReset">Reset</button
+              ><label
+                >Camera
+                <select id="scannerCamera">
+                  <option value="overview">Overview</option>
+                  <option value="inside">Inside ring</option>
+                  <option value="slice">Transaxial slice</option>
+                  <option value="block">Exploded detector block</option>
+                </select></label
+              ><label
+                ><input id="scannerHousing" type="checkbox" checked />
+                Housing</label
+              ><label
+                ><input id="showTrues" type="checkbox" checked /> Trues</label
+              ><label
+                ><input id="showScatter" type="checkbox" checked />
+                Scatter</label
+              ><label
+                ><input id="showRandoms" type="checkbox" checked />
+                Randoms</label
+              >
+            </div>
+            <label class="sliderlabel" for="scannerProgress"
+              >Scrub acquisition
+              <output id="scannerProgressValue">0%</output></label
+            ><input
+              id="scannerProgress"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="0"
+            />
+            <p class="caption">
+              Playback compresses the selected scan into 24 seconds. Individual
+              histories are representative illustrations, not every count in the
+              live slice panels. Event filters hide paths without changing data.
+              Nothing plays automatically.
+            </p>
+            <details open>
+              <summary>Tracer, detector and acquisition settings</summary>
+              <div class="sceneSettings">
+                <label
+                  >Isotope<select id="sceneIsotope">
+                    <option value="F18" selected>F-18</option>
+                    <option value="C11">C-11</option>
+                    <option value="Ga68">Ga-68</option>
+                    <option value="O15">O-15</option>
+                    <option value="Rb82">Rb-82</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Activity at reference time
+                    <output id="sceneActivityValue">200 MBq</output></span
+                  ><input
+                    id="sceneActivity"
+                    type="range"
+                    min="10"
+                    max="800"
+                    step="10"
+                    value="200" /></label
+                ><label
+                  ><span
+                    >Delay to scan
+                    <output id="sceneUptakeValue">60 min</output></span
+                  ><input
+                    id="sceneUptake"
+                    type="range"
+                    min="0"
+                    max="180"
+                    step="1"
+                    value="60" /></label
+                ><label
+                  ><span
+                    >Time per bed position
+                    <output id="sceneDurationValue">120 s</output></span
+                  ><input
+                    id="sceneDuration"
+                    type="range"
+                    min="10"
+                    max="600"
+                    step="10"
+                    value="120" /></label
+                ><label
+                  ><span
+                    >Inner ring diameter
+                    <output id="sceneRingValue">800 mm</output></span
+                  ><input
+                    id="sceneRing"
+                    type="range"
+                    min="600"
+                    max="1000"
+                    step="20"
+                    value="800" /></label
+                ><label
+                  ><span
+                    >Axial field of view
+                    <output id="sceneFOVValue">200 mm</output></span
+                  ><input
+                    id="sceneFOV"
+                    type="range"
+                    min="150"
+                    max="1200"
+                    step="10"
+                    value="200" /></label
+                ><label
+                  ><span
+                    >Crystal width
+                    <output id="sceneCrystalValue">4 mm</output></span
+                  ><input
+                    id="sceneCrystal"
+                    type="range"
+                    min="2"
+                    max="8"
+                    step="0.5"
+                    value="4" /></label
+                ><label
+                  ><span
+                    >Crystal depth
+                    <output id="sceneDepthValue">20 mm</output></span
+                  ><input
+                    id="sceneDepth"
+                    type="range"
+                    min="10"
+                    max="30"
+                    step="1"
+                    value="20" /></label
+                ><label
+                  >Scintillator<select id="sceneMaterial">
+                    <option value="LYSO" selected>LYSO</option>
+                    <option value="BGO">BGO</option>
+                    <option value="LaBr3">LaBr₃:Ce</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Lower energy level
+                    <output id="sceneEnergyValue">435 keV</output></span
+                  ><input
+                    id="sceneEnergy"
+                    type="range"
+                    min="350"
+                    max="480"
+                    step="5"
+                    value="435" /></label
+                ><label
+                  ><span
+                    >Full coincidence window
+                    <output id="sceneWindowValue">4 ns</output></span
+                  ><input
+                    id="sceneWindow"
+                    type="range"
+                    min="2"
+                    max="8"
+                    step="0.5"
+                    value="4" /></label
+                ><label
+                  >TOF timing FWHM<select id="sceneTOF">
+                    <option value="0">Off</option>
+                    <option value="600">600 ps</option>
+                    <option value="400">400 ps</option>
+                    <option value="200" selected>200 ps</option>
+                    <option value="100">100 ps</option>
+                  </select></label
+                ><label
+                  >Axial acceptance<select id="sceneMode">
+                    <option value="3D" selected>3D · no septa</option>
+                    <option value="2D">2D · near-direct pairs</option>
+                  </select></label
+                ><label class="sceneCheck"
+                  ><input type="checkbox" id="sceneDOI" /> DOI: 3 mm depth
+                  uncertainty</label
+                >
+              </div>
+              <p class="caption">
+                Longer FOV accepts more oblique lines; smaller crystals increase
+                detector count. Crystal depth and DOI change the off-axis
+                resolution budget. Material selects cited energy-resolution and
+                light-decay examples. Rendered detector blocks group
+                neighbouring crystals; the exploded view resolves an 8 × 8
+                array. Detector capture uses each material’s 511 keV attenuation
+                coefficient (LSO value for LYSO;
+                <a
+                  href="https://doi.org/10.3389/fphy.2022.816384"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Gonzalez-Montoro et al. 2022</a
+                >, Table 1). Count rates scale with each isotope’s positron
+                fraction.
+                <a href="../../reference/#tradeoffs">Parameter trade-offs</a>.
+              </p>
+            </details>
+            <details>
+              <summary>Live slice reconstruction and corrections</summary>
+              <div class="sceneSettings">
+                <label
+                  >Algorithm<select id="sceneAlgorithm">
+                    <option value="FBP">FBP</option>
+                    <option value="MLEM">MLEM</option>
+                    <option value="OSEM" selected>OSEM</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Iterations
+                    <output id="sceneIterationsValue">3 </output></span
+                  ><input
+                    id="sceneIterations"
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value="3" /></label
+                ><label
+                  >Subsets<select id="sceneSubsets">
+                    <option value="1">1</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                  </select></label
+                ><label
+                  ><span
+                    >Post-filter FWHM
+                    <output id="sceneFilterValue">4 mm</output></span
+                  ><input
+                    id="sceneFilter"
+                    type="range"
+                    min="0"
+                    max="12"
+                    step="1"
+                    value="4" /></label
+                ><label class="sceneCheck"
+                  ><input type="checkbox" id="scenePSF" /> PSF in iterative
+                  model</label
+                ><label class="sceneCheck"
+                  ><input type="checkbox" id="sceneCorrNorm" checked />
+                  Normalisation</label
+                ><label class="sceneCheck"
+                  ><input type="checkbox" id="sceneCorrAtten" checked />
+                  Attenuation</label
+                ><label class="sceneCheck"
+                  ><input type="checkbox" id="sceneCorrScatter" checked />
+                  Scatter</label
+                ><label class="sceneCheck"
+                  ><input type="checkbox" id="sceneCorrRandoms" checked />
+                  Randoms</label
+                ><label class="sceneCheck"
+                  ><input type="checkbox" id="sceneCorrDecay" checked /> Decay
+                  to reference time</label
+                >
+              </div>
+              <p class="caption">
+                The independent 64 × 64 diagnostic slice uses the matched Siddon
+                engine. Its data include an isotropic Gaussian resolution
+                budget; optional PSF modelling uses the same blur in forward and
+                transpose operations. TOF controls the event localisation and
+                timeline; this slice reconstruction remains non-TOF. FBP has no
+                iterative PSF model. Controls here do not alter the
+                reconstruction lab.
+              </p>
+            </details>
+          </div>
+          <dl class="sceneReadouts">
+            <div>
+              <dt>Cumulative prompts</dt>
+              <dd id="sceneCounts">—</dd>
+              <dd class="note">sampled T + S + R</dd>
+            </div>
+            <div>
+              <dt>Trues / scatter / randoms</dt>
+              <dd id="sceneTSR">—</dd>
+              <dd class="note">independent Poisson components</dd>
+            </div>
+            <div>
+              <dt>Model NECR</dt>
+              <dd id="sceneNECR">—</dd>
+              <dd class="note">T² / (T + S + 2R)</dd>
+            </div>
+            <div>
+              <dt>Model scatter / random fractions</dt>
+              <dd id="sceneSF">—</dd>
+              <dd class="note">S/(T+S) · R/(T+S+R)</dd>
+            </div>
+            <div>
+              <dt>Model randoms rate</dt>
+              <dd id="sceneRandomRate">—</dd>
+              <dd class="note">R after energy and timing selection</dd>
+            </div>
+            <div>
+              <dt>Model singles dead-time loss</dt>
+              <dd id="sceneDead">—</dd>
+              <dd class="note">1 − exp(−40 ns × input singles)</dd>
+            </div>
+            <div>
+              <dt>Activity at scan / corrected</dt>
+              <dd id="sceneDecay">—</dd>
+              <dd class="note">A₀ × 2⁻ᵗ⁄ᵀ½ / back to reference</dd>
+            </div>
+            <div>
+              <dt>Acquisition time</dt>
+              <dd id="sceneTime">—</dd>
+              <dd class="note">selected duration × playhead</dd>
+            </div>
+            <div>
+              <dt>Resolution: centre / 150 mm off-axis</dt>
+              <dd id="sceneResolution">—</dd>
+              <dd class="note">1.25 × quadrature budget</dd>
+            </div>
+          </dl>
+          <p id="scannerStatus" role="status" class="caption">
+            Play to calculate the cumulative acquisition. The 3D view can be
+            explored without running a scan.
+          </p>
+          <div class="sceneDiagnostics">
+            <figure class="scenePanel">
+              <h3>Cumulative 2D sinogram</h3>
+              <canvas
+                id="sceneSino"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Cumulative 2D sinogram, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="sceneSinoMax">— counts/bin</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3>Current slice reconstruction</h3>
+              <canvas
+                id="sceneRecon"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Current slice reconstruction, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="sceneReconMax">7 a.u.</span>
+                </div>
+              </div>
+            </figure>
+            <div class="scenePanel">
+              <h3>The most recent illustrated pair</h3>
+              <dl class="metadata">
+                <dt>Class</dt>
+                <dd id="eventClass">—</dd>
+                <dt>Detector IDs</dt>
+                <dd id="eventDetectors">—</dd>
+                <dt>Energy pair</dt>
+                <dd id="eventEnergy">—</dd>
+                <dt>Timing difference</dt>
+                <dd id="eventDelta">—</dd>
+                <dt>Illustrated T / S / R</dt>
+                <dd id="eventCounts">0 / 0 / 0</dd>
+              </dl>
+              <p class="caption" style="margin-top: 18px">
+                Phantom emission positions are activity-weighted. An exponential
+                radial range proxy, ≈0.50° projected pair-angle FWHM
+                non-collinearity, water-equivalent attenuation and at most one
+                Klein–Nishina scatter per photon precede energy and timing
+                gates. Photon markers are enlarged; flight is slowed for
+                inspection.
+              </p>
+            </div>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              The 3D histories use approximate 4 mm attenuation integration and
+              μ at 511 keV even after scattering. Random candidates pair
+              unrelated emissions, conditioned on the timing window. The slice
+              panels instead accumulate Poisson increments from a separate 2D
+              model with scan-averaged rates, toy scatter shape and ideal known
+              correction expectations. The analytic 2D-mode rate factors are
+              assumed (0.18 for trues and an additional 0.35 for scatter); FOV
+              uses central-point solid angle and detector depth uses exponential
+              capture. These are illustrative scalings, not scanner
+              specifications; this is not GATE, Geant4 or SimSET. With TOF off,
+              an assumed 600 ps timing jitter still applies to the coincidence
+              test for every material.
+            </p>
+          </details>
+        </section>
+        <section id="sinogram-bench" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">
+                Chapter 5 / From annihilation to sinogram
+              </div>
+              <h2>A line becomes a coordinate.</h2>
+            </div>
+            <p>
+              Trace a point source through projection space, inspect list-mode
+              records, then connect axial detector pairs.
+            </p>
+          </div>
+          <div class="recordbar" aria-label="Sinogram bench recording controls">
+            <label class="recordOption"
+              >Frame
+              <select id="benchAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="benchClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="benchFullscreen">
+              Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="benchRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="benchGL"
+                class="sceneGL"
+                aria-label="Three-dimensional activity plane, sinogram plane and axial detector-ring diagram"
+                role="img"
+              ></canvas
+              ><canvas
+                id="benchHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="benchFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="benchPlay" class="primary" aria-pressed="false">
+                Play bench</button
+              ><label
+                >Act
+                <select id="benchAct">
+                  <option value="0">1 · Line integral</option>
+                  <option value="1">2 · Point-source sine trace</option>
+                  <option value="2">3 · List mode or sinogram</option>
+                  <option value="3">4 · Direct and oblique planes</option>
+                </select></label
+              ><label
+                ><input id="benchLoop" type="checkbox" checked /> Loop all
+                acts</label
+              >
+            </div>
+            <div class="sceneSettings">
+              <label
+                ><span
+                  >Projection angle φ
+                  <output id="benchAngleValue">35 °</output></span
+                ><input
+                  id="benchAngle"
+                  type="range"
+                  min="0"
+                  max="179"
+                  step="1"
+                  value="35" /></label
+              ><label
+                ><span
+                  >Radial coordinate s
+                  <output id="benchOffsetValue">24 mm</output></span
+                ><input
+                  id="benchOffset"
+                  type="range"
+                  min="-128"
+                  max="128"
+                  step="2"
+                  value="24" /></label
+              ><label
+                >Source<select id="benchSource">
+                  <option value="phantom" selected>Phantom slice</option>
+                  <option value="point">Single point at R +34, A +22 mm</option>
+                </select></label
+              ><label
+                ><span
+                  >Maximum ring difference
+                  <output id="benchRingDifferenceValue">4 </output></span
+                ><input
+                  id="benchRingDifference"
+                  type="range"
+                  min="0"
+                  max="8"
+                  step="1"
+                  value="4" /></label
+              ><label
+                >Axial span<select id="benchSpan">
+                  <option value="1">1</option>
+                  <option value="3" selected>3</option>
+                  <option value="5">5</option>
+                </select></label
+              >
+            </div>
+          </div>
+          <div class="formula">
+            s = x cosφ + y sinφ · each sinogram value is ∫ x(r) dl<br />For a
+            fixed off-centre point, changing φ traces a sinusoid.
+          </div>
+          <dl class="sceneReadouts">
+            <div>
+              <dt>Sampled lines / angles</dt>
+              <dd id="benchLORs">—</dd>
+              <dd class="note">120 angles × 129 radial bins</dd>
+            </div>
+            <div>
+              <dt>Radial spacing / angular step</dt>
+              <dd id="benchSampling">—</dd>
+              <dd class="note">fixed 2 mm / 180° ÷ 120</dd>
+            </div>
+            <div>
+              <dt>Detector crystals / hardware bin suggestion</dt>
+              <dd id="benchHardware">—</dd>
+              <dd class="note">round(πD/d) × round(L/d) / d÷2</dd>
+            </div>
+            <div>
+              <dt>2D sinogram / example list-mode size</dt>
+              <dd id="benchSizes">—</dd>
+              <dd class="note">4 bytes/bin / assumed 24 bytes/event</dd>
+            </div>
+            <div>
+              <dt>Valid ring pairs / grouped planes</dt>
+              <dd id="benchAxial">—</dd>
+              <dd class="note">9-ring toy map; segment and ring sum</dd>
+            </div>
+            <div>
+              <dt>Current line integral</dt>
+              <dd id="benchIntegral">—</dd>
+              <dd class="note">Siddon sample nearest (s, φ)</dd>
+            </div>
+          </dl>
+          <div class="sceneDiagnostics">
+            <figure class="scenePanel">
+              <h3>Activity input</h3>
+              <canvas
+                id="benchSlice"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Activity input, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="benchSliceMax">7 a.u.</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3>Projection space</h3>
+              <canvas
+                id="benchSino"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Projection space, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="benchSinoMax">— a.u.·cm</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3>Michelogram · nine example rings</h3>
+              <canvas
+                id="benchMichelogram"
+                class="sceneImage"
+                width="384"
+                height="384"
+                role="img"
+                aria-label="Michelogram showing allowed detector ring pairs and axial segments"
+              ></canvas>
+              <figcaption class="caption">
+                Ring i horizontally; ring j vertically. Diagonal = direct pairs.
+                Teal = central segment; amber / magenta = signed oblique
+                segments. Empty cells fail the ring-difference limit.
+              </figcaption>
+            </figure>
+          </div>
+          <details class="sceneDetails">
+            <summary>List mode: recent simulated event records</summary>
+            <div class="p4tablewrap" tabindex="0">
+              <table class="p4table">
+                <thead>
+                  <tr>
+                    <th>Class</th>
+                    <th>Crystal i</th>
+                    <th>Crystal j</th>
+                    <th>Illustration time (s)</th>
+                    <th>Δt (ns)</th>
+                    <th>E₁ / E₂ (keV)</th>
+                  </tr>
+                </thead>
+                <tbody id="eventTable">
+                  <tr>
+                    <td colspan="6">
+                      Play the scanner scene to generate records.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="caption">
+              The event table stores illustrated accepted pairs. The diagnostic
+              sinogram is a separate 2D acquisition. Displayed timestamps are
+              accelerated presentation times, not scanner list-mode time tags.
+              The 24-byte packet estimate is an assumed example, excluding
+              headers.
+            </p>
+          </details>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              Direct pairs join the same detector ring; oblique pairs connect
+              different rings. Maximum ring difference limits accepted
+              obliquity. Odd span groups adjacent ring differences into
+              segments; this toy map also groups by ring-index sum. Compression
+              reduces storage and axial detail. The 3D stack uses nine actual
+              phantom slices from z = −57 to +71 mm; diagram spacing is
+              illustrative. This is a teaching layout, not a vendor sinogram
+              address map.
+              <a
+                href="https://tech.snmjournals.org/content/30/2/39"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Axial sampling and Michelograms</a
+              >.
+            </p>
+          </details>
+        </section>
+        <section id="reconstruction-film" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">Chapter 8 / Reconstruction film</div>
+              <h2>See the estimate change.</h2>
+            </div>
+            <p>
+              Three acts use computed projection data and actual reconstruction
+              updates. Pause anywhere to inspect the image and its residual.
+            </p>
+          </div>
+          <div
+            class="recordbar"
+            aria-label="Reconstruction film recording controls"
+          >
+            <label class="recordOption"
+              >Frame
+              <select id="filmAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="filmClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="filmFullscreen">Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="filmRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="filmGL"
+                class="sceneGL"
+                aria-label="Three-dimensional reconstruction workbench with image, ratio sinogram and backprojected correction"
+                role="img"
+              ></canvas
+              ><canvas
+                id="filmHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="filmFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="filmBuild" class="primary">Compute film</button
+              ><button id="filmPlay" disabled aria-pressed="false">
+                Play film</button
+              ><label
+                >Act
+                <select id="filmAct">
+                  <option value="1">1 · Backprojection and ramp filter</option>
+                  <option value="2">2 · Iterative reconstruction</option>
+                  <option value="3">3 · Corrections, one at a time</option>
+                </select></label
+              ><label
+                ><input id="filmLoop" type="checkbox" checked /> Loop all
+                acts</label
+              >
+            </div>
+            <label class="sliderlabel" for="filmFrame"
+              >Computed checkpoint <output id="filmFrameValue">—</output></label
+            ><input
+              id="filmFrame"
+              type="range"
+              min="0"
+              max="1"
+              step="1"
+              value="0"
+              disabled
+            />
+            <p class="caption">
+              Uses the scanner settings above with a fixed 100,000 expected
+              prompts and seed 173. Act 2 uses MLEM or OSEM; if FBP is selected,
+              it demonstrates MLEM. Act 3 always uses 30 full MLEM iterations
+              per correction stage. Settings changes invalidate the film.
+            </p>
+          </div>
+          <div id="filmEquation" class="formula">ȳ = A x + s + r</div>
+          <p id="filmStatus" class="caption" role="status">
+            Compute the film to create the frames. Other experiments remain
+            available while it runs.
+          </p>
+          <div class="sceneDiagnostics">
+            <figure class="scenePanel">
+              <h3>Image at this checkpoint</h3>
+              <canvas
+                id="filmImage"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Image at this checkpoint, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="filmImageMax">7 a.u.</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3 id="filmRatioLabel">Measured / predicted</h3>
+              <canvas
+                id="filmRatio"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Measured / predicted, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="filmRatioMax">2 unitless</span>
+                </div>
+              </div>
+            </figure>
+            <figure class="scenePanel">
+              <h3 id="filmBackLabel">Backprojected ratio</h3>
+              <canvas
+                id="filmBack"
+                width="384"
+                height="384"
+                class="sceneImage"
+                role="img"
+                aria-label="Backprojected ratio, synthetic phantom"
+              ></canvas>
+              <div class="p4scale">
+                <div class="ramp"></div>
+                <div class="ticks">
+                  <span>0</span><span id="filmBackMax">2 unitless</span>
+                </div>
+              </div>
+            </figure>
+          </div>
+          <div class="undergrid">
+            <div class="theorypanel">
+              <h3>Full-data Poisson log-likelihood</h3>
+              <canvas
+                id="filmLikelihood"
+                width="640"
+                height="300"
+                role="img"
+                aria-label="Actual log-likelihood change versus subset updates"
+              ></canvas>
+              <p class="caption">
+                Shown relative to the initial estimate, per prompt. OSEM updates
+                need not increase the full-data likelihood monotonically.
+              </p>
+            </div>
+            <div class="theorypanel">
+              <h3>What changes inside a region?</h3>
+              <canvas
+                id="filmROI"
+                width="640"
+                height="300"
+                role="img"
+                aria-label="Lesion-region maximum and white-matter mean versus correction stage or update"
+              ></canvas>
+              <div class="plotkey">
+                <span>12 mm lesion region / maximum</span
+                ><span class="teal">Assigned WM voxels / mean</span>
+              </div>
+              <p class="caption">
+                Activity in a.u.; no SUV calibration. Lesion ROI: centres within
+                8 mm of the inserted 12 mm sphere’s centre. WM ROI: slice voxels
+                assigned exactly 1 a.u. Post-filter applies in Act 2; Act 3 uses
+                no post-filter.
+              </p>
+            </div>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              Plain backprojection spreads each line over the image, producing
+              the familiar 1/r blur in the ideal continuous 2D case. Its frames
+              are peak-normalised for display. FBP and iterative frames retain
+              activity scaling. Act 2’s backprojected ratio uses all angles to
+              diagnose the next full-data correction, even when OSEM updates use
+              subsets. Decay correction refers the estimate to the phantom’s
+              assigned reference activity; it does not restore lost counts.
+            </p>
+          </details>
+        </section>
+        <section id="coincidence-timeline" class="sceneSection">
+          <div class="sectionhead">
+            <div>
+              <div class="eyebrow">
+                Chapter 4 / One coincidence, frame by frame
+              </div>
+              <h2>The flight is short. The light lasts longer.</h2>
+            </div>
+            <p>
+              Separate travel time, pulse shape, timestamp extraction and energy
+              integration. The same event can have a nanosecond flight and a
+              much longer scintillation tail.
+            </p>
+          </div>
+          <div
+            class="recordbar"
+            aria-label="Coincidence timeline recording controls"
+          >
+            <label class="recordOption"
+              >Frame
+              <select id="timelineAspect">
+                <option value="wide">16:9</option>
+                <option value="square">1:1</option>
+                <option value="portrait">9:16</option>
+              </select></label
+            ><button id="timelineClean" aria-pressed="false">Clean UI</button
+            ><button class="recordOption" id="timelineFullscreen">
+              Fullscreen</button
+            ><span class="caption recordOption"
+              >Drag to orbit · Ctrl + scroll to zoom · Esc restores
+              controls</span
+            >
+          </div>
+          <div class="sceneFrame" id="timelineRecordFrame" data-aspect="wide">
+            <div class="sceneStage">
+              <canvas
+                id="timelineGL"
+                class="sceneGL"
+                aria-label="Three-dimensional linear nanosecond timeline with two scintillation pulses, CFD timestamps and delayed copies"
+                role="img"
+              ></canvas
+              ><canvas
+                id="timelineHUD"
+                class="sceneHUD"
+                aria-hidden="true"
+              ></canvas>
+              <div id="timelineFallback" class="sceneFallback" role="status">
+                Loading the 3D view…
+              </div>
+            </div>
+          </div>
+          <div class="sceneControls">
+            <div class="sceneButtons">
+              <button id="timelinePlay" class="primary" aria-pressed="false">
+                Play timeline</button
+              ><label
+                >Act
+                <select id="timelineAct">
+                  <option value="0">1 · Decay, range and photon flight</option>
+                  <option value="1">2 · Scintillation and timestamps</option>
+                  <option value="2">
+                    3 · Energy integration and prompt gate
+                  </option>
+                  <option value="3">4 · Delayed-window comparison</option>
+                </select></label
+              ><label
+                ><input id="timelineLoop" type="checkbox" checked /> Loop all
+                acts</label
+              ><label
+                ><input id="timelineZoom" type="checkbox" checked /> Flight /
+                timing close-up (0–6 ns)</label
+              >
+            </div>
+            <div class="sceneSettings">
+              <label
+                ><span
+                  >Source position toward detector 1
+                  <output id="timelinePositionValue">60 mm</output></span
+                ><input
+                  id="timelinePosition"
+                  type="range"
+                  min="-120"
+                  max="120"
+                  step="5"
+                  value="60" /></label
+              ><label
+                ><span
+                  >Scrub physical time
+                  <output id="timelineTimeValue">0 ns</output></span
+                ><input
+                  id="timelineTime"
+                  type="range"
+                  min="0"
+                  max="6"
+                  step=".01"
+                  value="0"
+              /></label>
+            </div>
+          </div>
+          <dl class="sceneReadouts">
+            <div>
+              <dt>Flight to detector 1 / 2</dt>
+              <dd id="timelineFlights">—</dd>
+              <dd class="note">(D/2 ∓ x) / c</dd>
+            </div>
+            <div>
+              <dt>Timing difference / TOF position</dt>
+              <dd id="timelineDelta">—</dd>
+              <dd class="note">Δt = t₂−t₁ / x = cΔt÷2</dd>
+            </div>
+            <div>
+              <dt>20% constant-fraction timestamps</dt>
+              <dd id="timelineCFD">—</dd>
+              <dd class="note">rising crossings of normalised pulse</dd>
+            </div>
+            <div>
+              <dt>Light decay / energy gate</dt>
+              <dd id="timelinePulse">—</dd>
+              <dd class="note">cited τ / assumed gate 5τ</dd>
+            </div>
+            <div>
+              <dt>Prompt timing decision</dt>
+              <dd id="timelineGate">—</dd>
+              <dd class="note">|Δt| ≤ full window ÷ 2</dd>
+            </div>
+            <div>
+              <dt>Energy-window decision</dt>
+              <dd id="timelineEnergy">—</dd>
+              <dd class="note" id="timelineEnergyWindow">ideal 511 keV deposits</dd>
+            </div>
+            <div>
+              <dt>TOF localisation FWHM</dt>
+              <dd id="timelineTOF">—</dd>
+              <dd class="note">c × coincidence timing FWHM ÷ 2</dd>
+            </div>
+          </dl>
+          <div class="theorypanel">
+            <h3>Pulse amplitudes on a linear time axis</h3>
+            <canvas
+              id="timelinePlot"
+              width="960"
+              height="320"
+              role="img"
+              aria-label="Normalised scintillation pulses versus physical nanosecond time"
+            ></canvas>
+            <div class="plotkey">
+              <span class="pink">Detector 1</span
+              ><span class="amber">Detector 2</span
+              ><span class="dotted">Delayed copy of detector 1</span>
+            </div>
+            <p id="timelineStatus" role="status" class="caption"></p>
+          </div>
+          <details class="assumptions">
+            <summary>Model assumptions</summary>
+            <p>
+              t = 0 is annihilation. The decay-to-annihilation interval is shown
+              as a conceptual prelude: positron slowing and annihilation
+              lifetime depend on material, and positronium can introduce
+              nanosecond delays. No universal isotope-only delay is asserted.
+              Pulses use an assumed 0.5 ns rise, the cited material decay, a 20%
+              CFD fraction and a 5τ energy gate. A 500 ns delayed copy
+              illustrates the principle; it rejects this true pair. Random
+              estimates require other, unrelated singles. These are teaching
+              electronics, not a commercial timing chain.
+              <a
+                href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9829407/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Positronium lifetime context</a
+              >.
+            </p>
+          </details>
+        </section>
+
+        <nav class="pager" aria-label="Previous and next">
+          <a class="prev" href="../../10-artifacts/"
+            ><small>Previous</small>Chapter 10 · Artifacts</a
+          ><a class="next" href="../reconstruction/"
+            ><small>Next</small>Reconstruction lab</a
+          >
+        </nav>
+      </main>
+      <footer class="sitefoot">
+        <p>
+          <strong>From Decay to Voxel</strong> · an interactive guide to the PET
+          pipeline.
+        </p>
+        <p>
+          Educational simulation. Every image comes from a synthetic phantom,
+          and no patient data is used. The models are teaching approximations,
+          not scanner specifications or clinical guidance.
+          <a href="../../reference/#methods">Model notes and sources</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

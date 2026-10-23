@@ -1,0 +1,44 @@
+{
+  "name": "Analytic FDG-like brain phantom",
+  "dimensions": [
+    128,
+    128,
+    96
+  ],
+  "originalDimensions": [
+    128,
+    128,
+    96
+  ],
+  "spacing_mm": [
+    2,
+    2,
+    2
+  ],
+  "dtype": "uint8",
+  "scale": 0.03125,
+  "units": "a.u.",
+  "order": "x-fastest, then y, then z; positive axes R, A, S",
+  "lesions": [
+    {
+      "diameter_mm": 6,
+      "centre_mm": [
+        32,
+        20,
+        7
+      ]
+    },
+    {
+      "diameter_mm": 12,
+      "centre_mm": [
+        -34,
+        16,
+        7
+      ]
+    }
+  ],
+  "files": {
+    "volume": "phantom.u8.gz",
+    "layout": "activity uint8 [x fastest, then y, then z], followed by tissue labels uint8 with the same layout"
+  }
+}
