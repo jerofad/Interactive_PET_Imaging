@@ -1,10 +1,14 @@
 /* Scanner scene: a horizontal-bore gantry, the phantom and the staged story of one coincidence.
    Geometry in mm. Patient [R,A,S] maps to world [-R, A, -S]: anterior up, the bore along z, the head
-   end toward the default camera. Event objects are pooled; one event rebuilds only its paths. */
+   end toward the default camera. Event objects are pooled; one event rebuilds only its paths.
+   Three layers: one narrated event told in beats, a few quick events in flight, and every finished
+   line of response kept in an additive buffer so the image builds up as the scan runs. */
 import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { ScenePhysics as P } from '../models/scene.js';
 import { Physics } from '../models/physics.js';
 
@@ -17,7 +21,12 @@ const RANGE_END = 0.2,
   LOR_START = 0.8,
   LOR_DRAWN = 0.88,
   TRAIL = 150, // mm of bright comet tail behind each photon
-  STEP = 4; // mm per trail segment
+  STEP = 4, // mm per trail segment
+  QUICK = 8, // quick events in flight at once
+  QUICK_FLIGHT = 0.45, // s for the farther photon of a quick event to land
+  QUICK_LOR = 0.35, // s a quick event's line stays bright before it joins the buffer
+  QUICK_TRAIL = 120, // mm
+  LINES = 6000; // stored lines of response per event class
 const clamp = (x) => Math.max(0, Math.min(1, x)),
   smooth = (x) => (x = clamp(x)) * x * (3 - 2 * x),
   lerp = (a, b, k) => a.map((v, i) => v + (b[i] - v) * k),
@@ -55,15 +64,15 @@ function rimMaterial(color, strength = 0.5) {
   });
 }
 
-/** Polyline resampled into STEP-mm segments with cumulative distance. */
-function sample(points) {
+/** Polyline resampled into step-mm segments with cumulative distance. */
+function sample(points, step = STEP) {
   const out = [points[0]],
     dist = [0];
   for (let i = 1; i < points.length; i++) {
     const a = points[i - 1],
       d = sub(points[i], a),
       L = P.norm(d),
-      n = Math.max(1, Math.ceil(L / STEP));
+      n = Math.max(1, Math.ceil(L / step));
     for (let k = 1; k <= n; k++) {
       out.push(P.add(a, d, k / n));
       dist.push(dist.at(-1) + L / n);
@@ -93,7 +102,11 @@ export function createScanner({ root, story, inputs, C, camera, mesh, material }
     tracks = [],
     lost = [],
     tofSpot = null,
-    lensPath = null;
+    lensPath = null,
+    cloud = null,
+    storyFlashes = 0,
+    latest = 0, // newest presentation time a line was stored at
+    quick = [];
   const glowMap = glowTexture(),
     lineMaterials = [],
     colour = new T.Color(),
@@ -141,6 +154,61 @@ export function createScanner({ root, story, inputs, C, camera, mesh, material }
     kink: glow(C.scatter),
     tofGlow: glow(C.activity),
   };
+  const kindColour = (kind) => (kind === 'true' ? C.photon : kind === 'scatter' ? C.scatter : C.random);
+  // Quick events share one fat segment buffer and a sprite pool; they are drawn with less detail.
+  const quickGroup = new T.Group(),
+    quickLines = (() => {
+      const m = new LineMaterial({
+          color: 0xffffff,
+          linewidth: 2.5,
+          vertexColors: true,
+          transparent: true,
+          blending: T.AdditiveBlending,
+          depthWrite: false,
+        }),
+        g = new LineSegmentsGeometry(),
+        capacity = QUICK * 6;
+      g.setPositions(new Float32Array(capacity * 6));
+      g.setColors(new Float32Array(capacity * 6));
+      g.instanceCount = 0;
+      lineMaterials.push(m);
+      const l = new LineSegments2(g, m);
+      l.frustumCulled = false;
+      quickGroup.add(l);
+      return l;
+    })(),
+    quickHeads = Array.from({ length: QUICK * 2 }, () => {
+      const s = glow();
+      story.remove(s);
+      quickGroup.add(s);
+      return s;
+    });
+  // Every finished line of response, one additive buffer per class so the event filters still apply.
+  const linesGroup = new T.Group(),
+    stored = Object.fromEntries(
+      ['true', 'scatter', 'random'].map((kind) => {
+        const pos = new Float32Array(LINES * 6),
+          geometry = new T.BufferGeometry(),
+          attribute = new T.BufferAttribute(pos, 3).setUsage(T.DynamicDrawUsage);
+        geometry.setAttribute('position', attribute);
+        geometry.setDrawRange(0, 0);
+        const lines = new T.LineSegments(
+          geometry,
+          new T.LineBasicMaterial({
+            color: kindColour(kind),
+            transparent: true,
+            opacity: 0.3,
+            blending: T.AdditiveBlending,
+            depthWrite: false,
+          }),
+        );
+        lines.frustumCulled = false;
+        linesGroup.add(lines);
+        return [kind, { lines, pos, attribute, times: new Float64Array(LINES), n: 0, shown: 0 }];
+      }),
+    );
+  story.add(quickGroup, linesGroup);
+  const layers = new Set([quickGroup, linesGroup]);
   function shape(line, points, withColours = false) {
     line.geometry.dispose();
     const g = new LineGeometry();
@@ -228,7 +296,7 @@ export function createScanner({ root, story, inputs, C, camera, mesh, material }
     flashes = new T.InstancedMesh(
       new T.BoxGeometry(((2 * Math.PI * radius) / nc) * 1.02, (s.fov / nr) * 1.02, s.depth * 1.08),
       new T.MeshBasicMaterial({ blending: T.AdditiveBlending, transparent: true, depthWrite: false }),
-      2,
+      2 + QUICK * 2,
     );
     flashes.count = 0;
     flashes.frustumCulled = false;
@@ -324,20 +392,17 @@ export function createScanner({ root, story, inputs, C, camera, mesh, material }
     pg.setAttribute('color', new T.Float32BufferAttribute(colours, 3));
     const cloudMap = new T.CanvasTexture(glowMap.image);
     cloudMap.colorSpace = T.SRGBColorSpace;
-    root.add(
-      new T.Points(
-        pg,
-        new T.PointsMaterial({
-          size: 6,
-          map: cloudMap,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.85,
-          blending: T.AdditiveBlending,
-          depthWrite: false,
-        }),
-      ),
-    );
+    cloud = new T.PointsMaterial({
+      size: 6,
+      map: cloudMap,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.85,
+      blending: T.AdditiveBlending,
+      depthWrite: false,
+    });
+    root.add(new T.Points(pg, cloud));
+    for (const q of quick) q.blocks = q.hits.map(blockIndex);
     labels = [{ p: [0, radius + 115, -s.fov / 2 - 30], text: 'Axial FOV ' + s.fov + ' mm' }];
     event = undefined; // force the current event to re-resolve crystal indices
   }
@@ -476,13 +541,17 @@ export function createScanner({ root, story, inputs, C, camera, mesh, material }
     flashes.instanceColor.needsUpdate = true;
   }
   function update(e, u) {
-    for (const o of story.children) o.visible = false;
+    for (const o of story.children) if (!layers.has(o)) o.visible = false;
     if (flashes) flashes.count = 0;
     chips = [];
     if (e !== event) setup(e);
     clock = u;
     visible = !!event && cam !== 'block' && inputs.show(event.kind) && tracks.length === 2;
-    if (!visible) return;
+    if (visible) tell(u);
+    storyFlashes = flashes ? flashes.count : 0;
+    drawQuick();
+  }
+  function tell(u) {
     const kind = event.kind,
       still = reduced(),
       floor = still ? 1 : 0.22,
@@ -545,9 +614,156 @@ export function createScanner({ root, story, inputs, C, camera, mesh, material }
     }
   }
 
+  /* ---------- Quick events and the growing set of lines ---------- */
+  function spawn(e, t) {
+    if (quick.length >= QUICK) {
+      commit(quick.shift().e);
+    }
+    const paths = e.arms.map((a) => sample(a.points.map(world), Infinity)),
+      longest = Math.max(...paths.map((p) => p.length)),
+      speed = longest / QUICK_FLIGHT,
+      arrive = paths.map((p) => p.length / speed),
+      hits = e.arms.map((a) => world(a.hit));
+    latest = Math.max(latest, t);
+    quick.push({
+      e,
+      age: 0,
+      paths,
+      speed,
+      arrive,
+      hits,
+      blocks: hits.map(blockIndex),
+      end: QUICK_FLIGHT + QUICK_LOR,
+    });
+  }
+  function advance(dt) {
+    for (const q of quick) q.age += dt;
+    for (const q of quick.filter((q) => q.age >= q.end)) commit(q.e);
+    quick = quick.filter((q) => q.age < q.end);
+    drawQuick();
+  }
+  function drawQuick() {
+    if (flashes) flashes.count = storyFlashes;
+    const g = quickLines.geometry,
+      pos = g.attributes.instanceStart.data,
+      col = g.attributes.instanceColorStart.data;
+    let n = 0,
+      heads = 0;
+    const put = (a, b, rgb, f0, f1) => {
+      pos.array.set([...a, ...b], n * 6);
+      col.array.set([rgb[0] * f0, rgb[1] * f0, rgb[2] * f0, rgb[0] * f1, rgb[1] * f1, rgb[2] * f1], n * 6);
+      n++;
+    };
+    for (const s of quickHeads) s.visible = false;
+    for (const q of quick) {
+      if (!inputs.show(q.e.kind)) continue;
+      const rgb = linear(kindColour(q.e.kind)),
+        d = q.age * q.speed;
+      q.paths.forEach((path, i) => {
+        if (d < path.length) {
+          // A short comet: the trail fades from the photon back to QUICK_TRAIL behind it.
+          const d0 = Math.max(0, d - QUICK_TRAIL),
+            level = (x) => (x - d0) / QUICK_TRAIL;
+          for (let k = 1; k < path.dist.length; k++) {
+            const a = Math.max(d0, path.dist[k - 1]),
+              b = Math.min(d, path.dist[k]);
+            if (b > a) put(at(path, a), at(path, b), rgb, level(a), level(b));
+          }
+          const head = quickHeads[heads++];
+          head.material.color.setHex(kindColour(q.e.kind));
+          place(head, at(path, d), 26, 0.9);
+        } else flash(q.blocks[i], 0.3 + 1.8 * Math.exp(-(q.age - q.arrive[i]) / 0.12));
+      });
+      const landed = Math.max(...q.arrive);
+      if (q.age >= landed) {
+        const f = 1.2 * (1 - (q.age - landed) / QUICK_LOR);
+        if (f > 0) put(q.hits[0], q.hits[1], rgb, f, f);
+      }
+    }
+    pos.needsUpdate = true;
+    col.needsUpdate = true;
+    g.instanceCount = n;
+    quickLines.visible = n > 0;
+    // Each line is faint; the per-line opacity falls as lines pile up so the density stays readable.
+    const total = count();
+    for (const [kind, a] of Object.entries(stored)) {
+      a.lines.visible = inputs.show(kind);
+      a.lines.material.opacity = Math.max(0.035, Math.min(0.5, 3.2 / Math.sqrt(total + 1)));
+    }
+    if (cloud) cloud.opacity = 0.85 - 0.55 * smooth(total / 1500);
+  }
+  /** Keep a finished event's line of response, stamped with presentation time t (default: the latest). */
+  function commit(e, t = latest) {
+    const a = stored[e.kind];
+    latest = Math.max(latest, t);
+    if (a.n < LINES) {
+      a.pos.set([...world(e.arms[0].hit), ...world(e.arms[1].hit)], a.n * 6);
+      a.attribute.addUpdateRange?.(a.n * 6, 6);
+      a.attribute.needsUpdate = true;
+      a.times[a.n++] = t;
+    }
+    a.shown = a.n;
+    a.lines.geometry.setDrawRange(0, a.n * 2);
+  }
+  /** Show only the lines recorded up to presentation fraction t. */
+  function showUntil(t) {
+    for (const a of Object.values(stored)) {
+      let lo = 0,
+        hi = a.n;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (a.times[mid] <= t) lo = mid + 1;
+        else hi = mid;
+      }
+      a.shown = lo;
+      a.lines.geometry.setDrawRange(0, lo * 2);
+    }
+    drawQuick();
+  }
+  /** Resuming after a scrub back: forget the lines recorded after t so new ones stay in time order. */
+  function trim(t) {
+    for (const a of Object.values(stored)) {
+      while (a.n && a.times[a.n - 1] > t) a.n--;
+      a.shown = Math.min(a.shown, a.n);
+      a.lines.geometry.setDrawRange(0, a.n * 2);
+    }
+    latest = Math.min(latest, t);
+    drawQuick();
+  }
+  function clear() {
+    latest = 0;
+    quick = [];
+    for (const a of Object.values(stored)) {
+      a.n = a.shown = 0;
+      a.lines.geometry.setDrawRange(0, 0);
+    }
+    drawQuick();
+  }
+  const count = () => Object.entries(stored).reduce((sum, [kind, a]) => sum + (inputs.show(kind) ? a.shown : 0), 0);
+  /** Clock values at which each beat of the narrated event reads completely, for stepping. */
+  function beats() {
+    if (tracks.length !== 2) return null;
+    return [
+      RANGE_END * 0.85,
+      (RANGE_END + tracks.first.arrive) / 2,
+      Math.min(LOR_START - 0.02, tracks.second.arrive + 0.05),
+      0.97,
+    ];
+  }
+
   /** Title and caption for the current beat, or null when no event is on screen. */
   function stage() {
-    if (!visible) return null;
+    if (!visible) {
+      const n = count();
+      return n && cam !== 'block'
+        ? {
+            title: 'Lines of response accumulate',
+            caption:
+              n.toLocaleString() +
+              ' lines so far, an illustrative subset of the counts. Their overlap is a blurred backprojection of the activity.',
+          }
+        : null;
+    }
     const u = clock,
       e = event,
       s = settings,
@@ -749,6 +965,13 @@ export function createScanner({ root, story, inputs, C, camera, mesh, material }
     pose,
     update,
     stage,
+    beats,
+    spawn,
+    advance,
+    commit,
+    showUntil,
+    trim,
+    clear,
     overlay,
     labels: () => labels.concat(chips),
     resize: (w, h) => lineMaterials.forEach((m) => m.resolution.set(w, h)),

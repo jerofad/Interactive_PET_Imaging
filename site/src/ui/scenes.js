@@ -3,8 +3,13 @@ import { chart } from '../core/chart.js';
 import { ScenePhysics } from '../models/scene.js';
 
 /* Controller for the scanner, sinogram bench, reconstruction film and coincidence timeline. */
-// Presentation time for one illustrated coincidence, long enough to read each of its beats.
-const EVENT_SECONDS = 3.4;
+// Presentation time for one narrated coincidence, long enough to read each of its beats.
+const EVENT_SECONDS = 3.4,
+  NARRATED = 3, // pairs told beat by beat before the stream starts (Narrated pace)
+  RAMP_SECONDS = 8, // stream ramp from a few pairs to the full drawing rate
+  QUICK_RATE = [1.5, 6], // animated pairs per presentation second, start → full
+  LINE_RATE = 160, // extra lines per second written straight to the buffer at full rate
+  STEP_HOLDS = [0.17, 0.43, 0.74, 0.97]; // beat stops when the 3D view cannot supply its own
 export function init({ volume, tissue }) {
   const q = $,
     put = (id, text) => (q(id).textContent = text),
@@ -27,6 +32,10 @@ export function init({ volume, tissue }) {
     eventClock = 0,
     shown = { true: 0, scatter: 0, random: 0 },
     eventRecords = [],
+    narrated = 0,
+    streamTime = 0,
+    quickDebt = 0,
+    lineDebt = 0,
     random = ScenePhysics.rng(1983),
     diagnostics = [],
     acqRunning = false,
@@ -125,6 +134,7 @@ export function init({ volume, tissue }) {
     benchSpan: '3',
     benchRingDifference: '4',
     scannerCamera: 'overview',
+    scannerPace: 'narrated',
     filmAct: '1',
     timelineAct: '0',
     timelinePosition: '60',
@@ -236,32 +246,29 @@ export function init({ volume, tissue }) {
       );
     views.scanner?.refreshTextures();
   }
-  function newEvent() {
-    if (!source) return;
+  function sampleEvent(preferTrue = false) {
+    if (!source) return null;
     let next = ScenePhysics.event(S, source, tissue, random);
-    // The first illustrated pair is a true coincidence so the story starts with the simple case.
-    for (let i = 0; i < 40 && !eventRecords.length && next && next.kind !== 'true'; i++)
+    for (let i = 0; i < 40 && preferTrue && next && next.kind !== 'true'; i++)
       next = ScenePhysics.event(S, source, tissue, random);
-    if (!next) {
-      put('eventClass', 'No accepted illustrative pair in this batch');
-      return;
-    }
-    event = next;
-    shown[event.kind]++;
-    eventRecords.push({ ...event, presentation: progress * 24 });
+    return next;
+  }
+  function countShown() {
+    put('eventCounts', [shown.true, shown.scatter, shown.random].join(' / '));
+  }
+  // Animated pairs (narrated and quick) are described and listed; buffer-only lines are just counted.
+  function record(e) {
+    shown[e.kind]++;
+    eventRecords.push({ ...e, presentation: progress * 24 });
     if (eventRecords.length > 8) eventRecords.shift();
     put(
       'eventClass',
-      event.kind === 'true'
-        ? 'True coincidence'
-        : event.kind === 'scatter'
-          ? 'Scattered coincidence'
-          : 'Random coincidence',
+      e.kind === 'true' ? 'True coincidence' : e.kind === 'scatter' ? 'Scattered coincidence' : 'Random coincidence',
     );
-    put('eventDetectors', event.arms.map((a) => a.id).join(' / '));
-    put('eventEnergy', event.arms.map((a) => a.energy.toFixed(1)).join(' / ') + ' keV');
-    put('eventDelta', event.dt.toFixed(3) + ' ns');
-    put('eventCounts', [shown.true, shown.scatter, shown.random].join(' / '));
+    put('eventDetectors', e.arms.map((a) => a.id).join(' / '));
+    put('eventEnergy', e.arms.map((a) => a.energy.toFixed(1)).join(' / ') + ' keV');
+    put('eventDelta', e.dt.toFixed(3) + ' ns');
+    countShown();
     q('eventTable').innerHTML = eventRecords
       .map(
         (e) =>
@@ -282,6 +289,62 @@ export function init({ volume, tissue }) {
       .join('');
     drawEventList();
   }
+  /** Start a narrated pair. The first one is a true coincidence so the story opens with the simple case. */
+  function newEvent() {
+    const next = sampleEvent(!eventRecords.length);
+    if (!next) {
+      put('eventClass', 'No accepted illustrative pair in this batch');
+      return;
+    }
+    if (event) views.scanner?.commit(event, progress);
+    event = next;
+    eventClock = 0;
+    record(event);
+  }
+  /** After the narrated pairs: a few animated pairs plus lines written directly, ramping up. */
+  function stream(dt) {
+    streamTime += dt;
+    const ramp = Math.min(1, streamTime / RAMP_SECONDS),
+      v = views.scanner;
+    quickDebt += dt * (QUICK_RATE[0] + (QUICK_RATE[1] - QUICK_RATE[0]) * ramp);
+    lineDebt = Math.min(40, lineDebt + dt * LINE_RATE * ramp * ramp);
+    for (; quickDebt >= 1; quickDebt--) {
+      const e = sampleEvent();
+      if (e) {
+        record(e);
+        v?.spawn(e, progress);
+      }
+    }
+    for (; lineDebt >= 1; lineDebt--) {
+      const e = sampleEvent();
+      if (e) {
+        shown[e.kind]++;
+        v?.commit(e, progress);
+      }
+    }
+    countShown();
+  }
+  function pace() {
+    return q('scannerPace').value;
+  }
+  /** Pause and move the narrated pair to its next or previous beat; past the last beat, narrate a new pair. */
+  function step(direction) {
+    setPlaying('scanner', false);
+    const holds = () => (event && views.scanner?.beats?.()) || STEP_HOLDS;
+    if (direction > 0) {
+      const next = event && holds().find((h) => h > eventClock + 0.005);
+      if (next !== undefined && next !== null) eventClock = next;
+      else {
+        newEvent();
+        if (!event) return;
+        views.scanner?.updateEvent(event, 0);
+        eventClock = holds()[0];
+      }
+    } else if (event) eventClock = [...holds()].reverse().find((h) => h < eventClock - 0.005) ?? holds()[0];
+    else return;
+    views.scanner?.updateEvent(event, eventClock);
+    render('scanner');
+  }
   function resetAcquisition() {
     playing.scanner = false;
     q('scannerPlay').textContent = 'Play acquisition';
@@ -295,6 +358,9 @@ export function init({ volume, tissue }) {
     eventClock = 0;
     shown = { true: 0, scatter: 0, random: 0 };
     eventRecords = [];
+    narrated = 0;
+    streamTime = quickDebt = lineDebt = 0;
+    views.scanner?.clearLines();
     drawEventList();
     random = ScenePhysics.rng(1983);
     q('scannerProgress').value = '0';
@@ -576,7 +642,7 @@ export function init({ volume, tissue }) {
     if (key === 'scanner') {
       // The view owns the beat timing of each event, so it also names the current beat.
       const block = q('scannerCamera').value === 'block',
-        story = event && views.scanner?.stage?.();
+        story = views.scanner?.stage?.();
       return {
         title: block
           ? 'Crystal → light guide → SiPM'
@@ -721,12 +787,20 @@ export function init({ volume, tissue }) {
     lastTick = now;
     if (playing.scanner) {
       progress = Math.min(1, progress + dt / 24);
-      eventClock += dt / EVENT_SECONDS;
-      if (!event || eventClock >= 1) {
-        eventClock = 0;
-        newEvent();
+      if (event) {
+        eventClock += dt / EVENT_SECONDS;
+        if (eventClock >= 1) {
+          views.scanner?.commit(event, progress);
+          event = null;
+          eventClock = 0;
+        }
       }
+      if (!event && pace() === 'narrated' && narrated < NARRATED) {
+        narrated++;
+        newEvent();
+      } else if (!event) stream(dt);
       views.scanner?.updateEvent(event, eventClock);
+      views.scanner?.advance(dt);
       q('scannerProgress').value = String(progress * 100);
       put('scannerProgressValue', (progress * 100).toFixed(0) + '%');
       drawDiagnostic();
@@ -787,6 +861,7 @@ export function init({ volume, tissue }) {
       return;
     }
     if (progress >= 1) resetAcquisition();
+    else views.scanner?.trimLines(progress);
     if (!acqRunning) {
       acqRunning = true;
       put('scannerStatus', 'Computing cumulative projections and reconstruction checkpoints…');
@@ -795,10 +870,13 @@ export function init({ volume, tissue }) {
     setPlaying('scanner', true);
   };
   q('scannerReset').onclick = resetAcquisition;
+  q('scannerPrev').onclick = () => step(-1);
+  q('scannerNext').onclick = () => step(1);
   q('scannerProgress').addEventListener('input', (e) => {
     setPlaying('scanner', false);
     progress = +e.target.value / 100;
     put('scannerProgressValue', (progress * 100).toFixed(0) + '%');
+    views.scanner?.showUntil(progress);
     if (!acqRunning) {
       acqRunning = true;
       run('acquisition');

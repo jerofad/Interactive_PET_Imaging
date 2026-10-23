@@ -200,6 +200,14 @@
               <button id="scannerPlay" class="primary" aria-pressed="false">
                 Play acquisition</button
               ><button id="scannerReset">Reset</button
+              ><button id="scannerPrev" aria-label="Previous beat">◀ Beat</button
+              ><button id="scannerNext" aria-label="Next beat">Beat ▶</button
+              ><label
+                >Pace
+                <select id="scannerPace">
+                  <option value="narrated">Narrated</option>
+                  <option value="fast">Fast</option>
+                </select></label
               ><label
                 >Camera
                 <select id="scannerCamera">
@@ -233,8 +241,11 @@
               value="0"
             />
             <p class="caption">
-              Playback compresses the selected scan into 24 seconds. Individual
-              histories are representative illustrations, not every count in the
+              Playback compresses the selected scan into 24 seconds. At Narrated
+              pace the first three pairs are told beat by beat, then lines of
+              response accumulate; Fast starts accumulating at once. The beat
+              buttons pause and step through one pair. Individual histories and
+              lines are representative illustrations, not every count in the
               live slice panels. Event filters hide paths without changing data.
               Nothing plays automatically.
             </p>
