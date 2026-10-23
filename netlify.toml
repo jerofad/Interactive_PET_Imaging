@@ -1,0 +1,8 @@
+# Served under https://jerryfadugba.com/pet/ through a proxy rule on the main site.
+[build]
+  command = "npm test && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  SITE_URL = "https://jerryfadugba.com/pet/"

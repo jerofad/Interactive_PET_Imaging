@@ -59,6 +59,8 @@ The page HTML files are the source. Edit them directly. Conventions:
 
 `npm run build` writes a static site to `dist/`. The build uses relative asset paths, so the same output works at a domain root or in any subfolder of an existing website. Copy `dist/` to the server.
 
+The live site is at https://jerryfadugba.com/pet/. Netlify builds it from `main` using `netlify.toml`, and the main site proxies `/pet/*` to it. GitHub Actions only runs the tests.
+
 Optional environment variables at build time:
 
 | Variable | Effect |
