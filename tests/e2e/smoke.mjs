@@ -42,7 +42,7 @@ const origin = `http://127.0.0.1:${server.address().port}${BASE}`;
 // Each route lists text that must appear in a status element once its computation finishes.
 const ROUTES = [
   ['', { status: [['heroStatus', /Complete/]] }],
-  ['1-tracers/', { text: [['positronRead', /e\+/]] }],
+  ['1-tracers/', { text: [['positronRead', /× 10/]] }],
   ['2-emission/', { text: [['noncolRead', /mm/]] }],
   ['3-detection/', { text: [['peakAcceptance', /%/]] }],
   ['4-coincidences/', { text: [['necrRead', /kcps/]], scenes: ['scanner', 'timeline'] }],

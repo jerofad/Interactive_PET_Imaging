@@ -29,6 +29,11 @@ export function init(phantom) {
     lastConvergence = null;
   const q = $,
     put = (id, text) => (q(id).textContent = text);
+  // 6.52e+11 → "6.52 × 10¹¹"
+  const scientific = (v) => {
+    const [m, e] = v.toExponential(2).split('e');
+    return m + ' × 10' + [...String(+e)].map((ch) => '⁻⁰¹²³⁴⁵⁶⁷⁸⁹'['-0123456789'.indexOf(ch)]).join('');
+  };
   const series = (lo, hi, n, f) =>
     Array.from({ length: n + 1 }, (_, i) => {
       const x = lo + ((hi - lo) * i) / n;
@@ -61,12 +66,14 @@ export function init(phantom) {
       ],
     });
     put('activityValue', T.activity + ' MBq');
-    put('uptakeValue', start.toFixed(2) + ' min');
-    put('durationValue', duration.toFixed(2) + ' min');
+    const minutes = (m) => (m < 1 ? (m * 60).toFixed(1) + ' s' : m.toFixed(1) + ' min');
+    put('uptakeValue', minutes(start) + ' · ' + T.uptake.toFixed(2) + ' T½');
+    put('durationValue', minutes(duration) + ' · ' + T.duration.toFixed(2) + ' T½');
     put('halfRead', iso.half < 3 ? (iso.half * 60).toFixed(2) + ' s' : iso.half.toFixed(1) + ' min');
     put('decayRead', Physics.decay(T.activity, start, iso.half).toFixed(2) + ' MBq');
-    put('windowRead', Physics.windowDecays(T.activity, start, duration, iso.half).toExponential(2));
-    put('positronRead', (iso.br * Physics.windowDecays(T.activity, start, duration, iso.half)).toExponential(2));
+    const decays = Physics.windowDecays(T.activity, start, duration, iso.half);
+    put('windowRead', scientific(decays));
+    put('positronRead', scientific(iso.br * decays));
     q('physIsotope').value = T.isotope;
     q('rangeIsotope').value = T.isotope;
   }

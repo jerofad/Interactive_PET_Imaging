@@ -207,7 +207,7 @@
                     value="200" /></label
                 ><label
                   ><span
-                    >Shared energy threshold
+                    >Lower energy threshold
                     <output id="necrEnergyValue">435 keV</output></span
                   ><input
                     id="necrEnergy"
@@ -259,12 +259,12 @@
                 <div>
                   <strong id="deadRead">—</strong
                   ><span>Singles dead-time loss</span
-                  ><code>1 − exp(−tdead Sin)</code>
+                  ><code>1 − exp(−t<sub>dead</sub> S<sub>in</sub>)</code>
                 </div>
                 <div>
                   <strong id="singlesRead">—</strong
                   ><span>Accepted singles, each stream</span
-                  ><code>Sin exp(−tdead Sin)</code>
+                  ><code>S<sub>in</sub> exp(−t<sub>dead</sub> S<sub>in</sub>)</code>
                 </div>
               </div>
               <figcaption>
@@ -275,7 +275,7 @@
                 <details class="assumptions">
                   <summary>Figure details</summary>
                   <p>
-                    Changing the shared energy window changes the accepted
+                    Changing the energy threshold changes the accepted
                     photopeak and tail fractions. The peak is computed from the
                     displayed model.
                   </p>
@@ -292,8 +292,8 @@
               >prompt gamma</a
             >
             ray with the positron. Ga-68 emits 1077 keV in 3.2% of decays and
-            Rb-82 emits 777 keV in 15.1%. A prompt gamma that lands in the
-            energy window can pair with an annihilation photon and add a
+            Rb-82 emits 777 keV in 15.1%. A prompt gamma that deposits an
+            energy inside the energy window can pair with an annihilation photon and add a
             background that standard randoms and scatter estimates do not fully
             describe. This model does not include it.
             <span class="sourceNote"
@@ -310,10 +310,11 @@
             <summary>Inspect the count-rate assumptions</summary>
             <p>
               Let p and q be the accepted photopeak and body-tail fractions from
-              Chapter 3. Two equivalent singles streams have Sin = 30,000 A
-              (0.65p + 0.35q) s⁻¹, where A is in MBq. With an assumed
-              paralyzable dead time of 40 ns, L = exp(−40 × 10⁻⁹ Sin). Rates are
-              T = 1,500 A p²L², S = 2,000 A pqL² and R = W(SinL)², in s⁻¹. These
+              Chapter 3. Two equivalent singles streams have S<sub>in</sub> =
+              30,000 A (0.65p + 0.35q) s⁻¹, where A is in MBq. With an assumed
+              paralyzable dead time of 40 ns, L = exp(−40 × 10⁻⁹ S<sub>in</sub>).
+              Rates are T = 1,500 A p²L², S = 2,000 A pqL² and R =
+              W(S<sub>in</sub>L)², in s⁻¹. These
               coefficients and mixture weights are chosen teaching inputs, not
               fitted scanner parameters. True timing acceptance is assumed to be
               one throughout the available window range. No prompt-gamma or
@@ -742,7 +743,7 @@
             <div>
               <dt>Timing difference / TOF position</dt>
               <dd id="timelineDelta">—</dd>
-              <dd class="note">Δt = t₂−t₁ / x = cΔt÷2</dd>
+              <dd class="note">Δt = t₂ − t₁; x = cΔt ÷ 2</dd>
             </div>
             <div>
               <dt>20% constant-fraction timestamps</dt>
@@ -828,7 +829,7 @@
               peaks at a finite activity. Beyond the peak, more activity adds
               more noise than signal.
             </li>
-            <li>A delayed timing window measures the random rate directly.</li>
+            <li>A delayed timing window estimates the random rate.</li>
           </ul>
         </aside>
         <nav class="pager" aria-label="Previous and next">

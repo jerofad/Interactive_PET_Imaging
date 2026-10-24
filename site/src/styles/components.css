@@ -1137,6 +1137,10 @@ input:disabled {
   background: none;
   border-top: 2px dotted var(--random);
 }
+.plotkey .greydash:before {
+  background: none;
+  border-top: 2px dashed var(--random);
+}
 .sourceNote {
   font-size: 12px;
   color: var(--muted);

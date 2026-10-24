@@ -9,7 +9,16 @@ export const color = (name) =>
 
 export function format(v) {
   const a = Math.abs(v);
-  return a >= 10 ? v.toFixed(0) : a >= 1 ? v.toFixed(1) : a === 0 ? '0' : a < 0.01 ? v.toExponential(1) : v.toFixed(2);
+  // Two significant digits below 1, so close ticks such as 0.033 and 0.025 stay distinct.
+  return a >= 10
+    ? v.toFixed(0)
+    : a >= 1
+      ? v.toFixed(1)
+      : a === 0
+        ? '0'
+        : a < 0.001
+          ? v.toExponential(1)
+          : String(+v.toPrecision(2));
 }
 
 export function chart(
@@ -42,7 +51,7 @@ export function chart(
     },
     xl = lines(xlabel, w - 20),
     yl = lines(ylabel, w - 20),
-    L = w < 400 ? 52 : 62,
+    L = w < 400 ? 58 : 62,
     R = w < 400 ? 16 : 24,
     U = 20 + yl.length * 16,
     B = 30 + xl.length * 16,

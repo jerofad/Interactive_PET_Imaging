@@ -163,7 +163,7 @@
                 of that kernel. These are separate quantities.
               </p>
               <div class="formula">
-                x = c · (tleft − tright) / 2<br />Localisation FWHM Δx = c · CTR
+                x = c · (t<sub>left</sub> − t<sub>right</sub>) / 2<br />Localisation FWHM Δx = c · CTR
                 / 2<br />c = 0.299792458 mm/ps
               </div>
               <p>
@@ -217,7 +217,7 @@
                     value="200" /></label
                 ><label
                   ><span
-                    >Arrival-time difference
+                    >Arrival-time difference, left − right
                     <output id="dtValue">0 ps</output></span
                   ><input
                     id="timeDifference"
@@ -237,7 +237,7 @@
               ></canvas>
               <div class="plotkey">
                 <span class="pink">TOF likelihood kernel</span
-                ><span class="grey">Uniform object-support reference</span>
+                ><span class="greydash">Uniform object-support reference</span>
               </div>
               <div class="theoryreads">
                 <div>
@@ -251,7 +251,7 @@
                 </div>
                 <div>
                   <strong id="tofPosition">—</strong><span>Kernel centre</span
-                  ><code>c · (tleft − tright) / 2</code>
+                  ><code>c · (t<sub>left</sub> − t<sub>right</sub>) / 2</code>
                 </div>
               </div>
               <figcaption>
@@ -285,7 +285,7 @@
               aria-label="Computed NRMSE versus twenty MLEM iterations for non-TOF and TOF reconstruction"
             ></canvas>
             <div class="plotkey">
-              <span class="grey">Non-TOF</span
+              <span class="greydash">Non-TOF</span
               ><span class="pink">Selected TOF resolution</span>
             </div>
             <p id="tofStatus" class="caption" role="status">
@@ -293,7 +293,7 @@
             </p>
             <figcaption>
               <span
-                >Relative error ‖x − xtrue‖₂/‖xtrue‖₂, at iterations 0–20.</span
+                >Relative error ‖x − x<sub>true</sub>‖₂ / ‖x<sub>true</sub>‖₂, at iterations 0–20.</span
               >
               <details class="assumptions">
                 <summary>Figure details</summary>

@@ -179,13 +179,13 @@
                 D · δ / 4<br />δ ≈ 0.0088 rad ≈ 0.50° FWHM
               </div>
               <p>
-                Here δ is the deviation of the <em>photon-pair angle</em> from
-                180°. A 0.25° half-angle convention must not be labelled as that
-                full pair-angle FWHM.
+                Here δ is the FWHM of the <em>photon-pair angle’s</em> deviation
+                from 180°. Some texts write the same spread as ±0.25°; that is
+                half of the 0.5° full width, not a different value.
               </p>
               <div class="theorycontrols">
                 <label
-                  >Shared isotope<select id="rangeIsotope">
+                  >Isotope<select id="rangeIsotope">
                     <option value="F18">F-18</option>
                     <option value="C11">C-11</option>
                     <option value="Ga68">Ga-68</option>
@@ -285,7 +285,9 @@
               adds blur that grows with ring diameter, about 0.0022 × D.
             </li>
             <li>
-              Both are physical limits. Better detectors cannot remove them.
+              Both are physical limits that better detectors cannot remove. A
+              smaller ring reduces non-collinearity blur, and reconstruction can
+              partly model positron range.
             </li>
           </ul>
         </aside>

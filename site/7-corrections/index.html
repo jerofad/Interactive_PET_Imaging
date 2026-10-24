@@ -172,8 +172,8 @@
                 opposing paths.
               </p>
               <div class="formula">
-                Ppair = e⁻µℓ¹ · e⁻µℓ² = e⁻µ(ℓ¹+ℓ²)<br />General case: Ppair =
-                exp(−∫LOR μ dl)<br />Attenuation correction factor = 1/Ppair
+                P<sub>pair</sub> = exp(−μℓ₁) · exp(−μℓ₂) = exp(−μ(ℓ₁+ℓ₂))<br />General case: P<sub>pair</sub> =
+                exp(−∫<sub>LOR</sub> μ dl)<br />Attenuation correction factor = 1/P<sub>pair</sub>
               </div>
               <p>
                 Move the annihilation point. One photon travels farther and the
@@ -331,7 +331,7 @@
                   <summary>Figure details</summary>
                   <p>
                     Below water: 0.096(1 + HU/1000). Above water: 0.096 + (0.172
-                    − 0.096)HU/HUbone. This example is not a scanner
+                    − 0.096) HU / HU<sub>bone</sub>. This example is not a scanner
                     calibration.
                   </p>
                 </details>
@@ -480,9 +480,9 @@
                 the map (see <a href="../10-artifacts/">Chapter 10</a>).
               </p>
               <p>
-                MRI does not measure photon attenuation. PET/MR relies on tissue
-                segmentation, atlases or learned pseudo-CT images, which need
-                careful checks in bone, air cavities and implants.
+                MRI does not measure photon attenuation, so PET/MR needs a
+                substitute μ-map: tissue segmentation, atlases or learned
+                pseudo-CT images (see the attenuation section above).
               </p>
               <p class="sourceNote">
                 <a
